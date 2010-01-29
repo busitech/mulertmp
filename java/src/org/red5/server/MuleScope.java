@@ -31,29 +31,6 @@ public class MuleScope extends Scope {
 
     @Override
     public boolean connect(IConnection conn, Object[] params) {
-        /*
-        String id = conn.getSessionId();
-        // Use client registry from scope the client connected to.
-        IScope connectionScope = Red5.getConnectionLocal().getScope();
-        log.debug("Connection scope: {}", (connectionScope == null ? "is null" : "not null"));
-
-        // when the scope is null bad things seem to happen, if a null scope is OK then
-        // this block will need to be removed - Paul
-        if (connectionScope == null) {
-            return false;
-        }
-
-        // Get client registry for connection scope
-        //IClientRegistry clientRegistry = new ClientRegistry();//connectionScope.getContext().getClientRegistry();
-        log.debug("Client registry: {}", (clientRegistry == null ? "is null" : "not null"));
-
-        // Get client from registry by id or create a new one
-        IClient client = clientRegistry.hasClient(id) ? clientRegistry.lookupClient(id) : clientRegistry.newClient(params);
-        //IClient client = clientRegistry.newClient(params);
-
-        // We have a context, and a client object.. time to init the connection.
-        conn.initialize(client);
-              */
         return super.connect(conn, params);    //To change body of overridden methods use File | Settings | File Templates.
     }
 
