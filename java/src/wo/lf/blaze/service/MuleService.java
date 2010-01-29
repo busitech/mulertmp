@@ -23,6 +23,6 @@ package wo.lf.blaze.service;
 public class MuleService {
     public String helloWorld()
     {
-         return "hello world from wolf";
+         return "hello world from mule";
     }
 }
