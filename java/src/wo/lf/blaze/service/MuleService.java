@@ -25,4 +25,9 @@ public class MuleService {
     {
          return "hello world from mule";
     }
+
+    public String faultNullPointer() {
+        String nothing = null;
+        return nothing.substring(0) ;
+    }
 }

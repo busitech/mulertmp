@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="100%" height="100%" applicationComplete="init()">
+	<mx:Consumer id="consumer" channelDisconnect="channelDisconnect(event)" resubscribeInterval="60000" channelConnect="channelConnect(event)" destination="chat" message="messageHandler(event.message)"/>
+	<mx:Producer id="producer" destination="chat"/>
+	<mx:RemoteObject id="muleService" destination="muleService" result="serviceResult(event);" fault="serviceFault(event)" />
+    <mx:RemoteObject id="muleService2" destination="muleService2" result="serviceResult(event);"
+                     fault="serviceFault(event)"/>
+	<mx:VBox width="100%" height="100%">
+        <mx:Panel title="Chat" width="100%" height="100%">
+            <mx:TextArea id="log" width="100%" height="100%" valueCommit="log.verticalScrollPosition = log.maxVerticalScrollPosition" />
+            <mx:ControlBar>
+                <mx:TextInput id="msg" width="100%" enter="send()"/>
+                <mx:Button label="Send B" click="send()"/>
+                <mx:Button label="{continuousMessages ? 'turn off status messages' : 'turn on status messages'}" click="continuousMessages = !continuousMessages;"/>
+            </mx:ControlBar>
+
+        </mx:Panel>
+        <mx:Panel title="Service" width="100%" height="10%">
+            <mx:ControlBar>
+                <mx:Button label="invoke helloWorld" click="muleService.helloWorld()"/>
+                <mx:Button label="invoke null pointer exception" click="muleService.faultNullPointer()"/>
+                <mx:Button label="invoke none existing service" click="muleService2.faultNullPointer()"/>
+            </mx:ControlBar>
+        </mx:Panel>
+	</mx:VBox>
+
+    <mx:Script>
+		<![CDATA[
+        import mx.messaging.messages.ErrorMessage;
+        import mx.logging.Log;
+        import mx.logging.LogEventLevel;
+        import mx.logging.targets.TraceTarget;
+        import mx.messaging.ChannelSet;
+        import mx.messaging.channels.NetConnectionChannel;
+        import mx.messaging.events.ChannelEvent;
+        import mx.rpc.events.FaultEvent;
+        import mx.rpc.events.ResultEvent;
+        import mx.utils.UIDUtil;
+
+        private var _continuousMessages:Boolean;
+
+        [Bindable]
+        public function get continuousMessages():Boolean
+        {
+            return _continuousMessages;
+        }
+
+        public function set continuousMessages(value:Boolean):void
+        {
+            if (continuousMessages) {
+                messageTimer.stop();
+            }
+            _continuousMessages = value;
+            if (continuousMessages) {
+                messageTimer.start();
+            }
+        }
+
+
+        [Bindable]
+        private var channelSet:ChannelSet = new ChannelSet();
+
+        private var clientId:String = UIDUtil.createUID();
+
+        private var messageTimer:Timer = new Timer(1000)
+
+        import mx.messaging.messages.AsyncMessage;
+        import mx.messaging.messages.IMessage;
+
+        private function initLogging():void {
+            // Create a target.
+            var logTarget:TraceTarget = new TraceTarget();
+
+            // Log only messages for the classes in the mx.rpc.* and
+            // mx.messaging packages.
+            logTarget.filters = ["mx.rpc.*","mx.messaging.*"];
+
+            // Log all log levels.
+            logTarget.level = LogEventLevel.ALL;
+
+            // Add date, time, category, and log level to the output.
+            logTarget.includeDate = true;
+            logTarget.includeTime = true;
+            logTarget.includeCategory = true;
+            logTarget.includeLevel = true;
+
+            // Begin logging.
+            Log.addTarget(logTarget);
+        }
+
+
+        private function init():void
+        {
+            initLogging();
+            consumer.subscribe();
+            messageTimer.addEventListener(TimerEvent.TIMER, onTimer);
+        }
+
+        private function onTimer(e:TimerEvent):void
+        {
+            var message:IMessage = new AsyncMessage();
+            message.body.chatMessage = clientId + " " + Timer(e.target).currentCount;
+            producer.send(message);
+        }
+
+        private function send():void {
+            var message:IMessage = new AsyncMessage();
+            message.body.chatMessage = msg.text;
+            message.body.bla = new ErrorMessage();
+            ErrorMessage(message.body.bla).faultString = "lalala";
+            producer.send(message);
+            msg.text = "";
+        }
+
+        private function messageHandler(message:IMessage):void {
+            log.text += message.body.chatMessage + "\n";
+        }
+
+        private function channelConnect(event:ChannelEvent):void
+        {
+            log.text += "ChannelConnect\n";
+
+        }
+
+        private function channelDisconnect(event:ChannelEvent):void
+        {
+            log.text += "ChannelDisconnect\n";
+            messageTimer.stop();
+        }
+
+        private function serviceResult(e:ResultEvent):void
+        {
+            log.text += "ServiceResult: " + e + "(" + e.result + ")\n";
+        }
+
+        private function serviceFault(e:FaultEvent):void
+        {
+            log.text += "ServiceFault: " + e + "(" + e.fault + ")\n";
+        }
+
+		]]>
+	</mx:Script>
+</mx:Application>

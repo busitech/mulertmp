@@ -10,7 +10,7 @@
         <channel ref="my-rtmp"/>
     </default-channels>
 
-    <destination id="wolfService" >
+    <destination id="muleService" >
     <properties>
         <source>wo.lf.blaze.service.MuleService</source>
         <scope>application</scope>
