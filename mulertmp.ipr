@@ -305,9 +305,7 @@
       </SOURCES>
     </library>
     <library name="lib-flash">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/as3/MuleRTMPFlexLib/bin/MuleRTMPFlexLib.swc!/" />
-      </CLASSES>
+      <CLASSES />
       <JAVADOC />
       <SOURCES />
     </library>
