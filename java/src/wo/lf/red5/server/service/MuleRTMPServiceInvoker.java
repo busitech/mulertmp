@@ -42,7 +42,7 @@ import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
 
 import java.io.*;
 
-public class MuleServiceInvoker extends ServiceInvoker{
+public class MuleRTMPServiceInvoker extends ServiceInvoker{
 
     public static MuleRTMPAMFEndpoint endpoint;
     /**

@@ -20,20 +20,24 @@
 
 package org.red5.server;
 
-import org.red5.server.adapter.ApplicationAdapter;
-import org.red5.server.api.*;
-import org.springframework.context.ApplicationContextAware;
+import org.red5.server.CoreHandler;
+import org.red5.server.api.IConnection;
+import org.red5.server.api.IContext;
+import org.red5.server.api.service.IServiceCall;
 
 
-public class MuleScope extends Scope {
+public class MuleRTMPCoreHandler extends CoreHandler {
 
-    
+    /**
+     * Remote method invocation
+     *
+     * @param conn Connection to invoke method on
+     * @param call Service call context
+     * @return true on success
+     */
+    public boolean serviceCall(IConnection conn, IServiceCall call) {
+        // never call anything here
 
-    @Override
-    public boolean connect(IConnection conn, Object[] params) {
-        return super.connect(conn, params);    //To change body of overridden methods use File | Settings | File Templates.
+        return true;
     }
-
-    
-
 }

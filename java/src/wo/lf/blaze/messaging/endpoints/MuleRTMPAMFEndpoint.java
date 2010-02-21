@@ -26,12 +26,12 @@ import flex.messaging.client.FlexClient;
 import flex.messaging.endpoints.AMFEndpoint;
 import org.red5.server.net.rtmp.codec.MuleRTMPProtocolDecoder;
 import org.red5.server.net.rtmp.codec.MuleRTMPProtocolEncoder;
-import wo.lf.red5.server.service.MuleServiceInvoker;
+import wo.lf.red5.server.service.MuleRTMPServiceInvoker;
 
 public class MuleRTMPAMFEndpoint extends AMFEndpoint{
     public MuleRTMPAMFEndpoint(){
         super();
-        MuleServiceInvoker.endpoint = this;
+        MuleRTMPServiceInvoker.endpoint = this;
         if(MuleRTMPProtocolEncoder.serializationContext == null){
             MuleRTMPProtocolEncoder.serializationContext = serializationContext;
         }

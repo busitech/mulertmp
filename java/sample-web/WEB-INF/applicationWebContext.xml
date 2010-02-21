@@ -26,14 +26,14 @@
         </property>
     </bean>
 
-    <bean id="global.handler" class="org.red5.server.MuleCoreHandler"/>
+    <bean id="global.handler" class="org.red5.server.MuleRTMPCoreHandler"/>
 
-    <bean id="mule.serviceInvoker" class="wo.lf.red5.server.service.MuleServiceInvoker">
+    <bean id="mule.serviceInvoker" class="wo.lf.red5.server.service.MuleRTMPServiceInvoker">
         <property name="messageBroker" ref="_messageBroker" />  
     </bean>
 
     <bean id="clientRegistry" class="org.red5.server.ClientRegistry" />
-    <bean id="globalContext" class="org.red5.server.MuleGlobalContext">
+    <bean id="globalContext" class="org.red5.server.MuleRTMPGlobalContext">
         <property name="clientRegistry" ref="clientRegistry" />
         <property name="serviceInvoker" ref="mule.serviceInvoker" />
     </bean>

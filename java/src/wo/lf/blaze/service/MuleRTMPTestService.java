@@ -20,7 +20,7 @@
 
 package wo.lf.blaze.service;
 
-public class MuleService {
+public class MuleRTMPTestService {
     public String helloWorld()
     {
          return "hello world from mule";

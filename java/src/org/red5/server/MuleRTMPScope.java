@@ -20,21 +20,20 @@
 
 package org.red5.server;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.ReflectionUtils;
+import org.red5.server.adapter.ApplicationAdapter;
+import org.red5.server.api.*;
+import org.springframework.context.ApplicationContextAware;
 
-import java.lang.reflect.Field;
 
+public class MuleRTMPScope extends Scope {
 
-public class MuleGlobalContext extends Context {
+    
 
     @Override
-    public void setApplicationContext(ApplicationContext context) {
-        Field field = ReflectionUtils.findField(Context.class, "applicationContext");
-        field.setAccessible(true);
-        ReflectionUtils.setField(field, this, context);
-        Field field2 = ReflectionUtils.findField(Context.class, "coreContext");
-        field2.setAccessible(true);
-        ReflectionUtils.setField(field2, this, context.getParentBeanFactory());
+    public boolean connect(IConnection conn, Object[] params) {
+        return super.connect(conn, params);    //To change body of overridden methods use File | Settings | File Templates.
     }
+
+    
+
 }

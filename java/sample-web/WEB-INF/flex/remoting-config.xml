@@ -12,7 +12,7 @@
 
     <destination id="muleService" >
     <properties>
-        <source>wo.lf.blaze.service.MuleService</source>
+        <source>wo.lf.blaze.service.MuleRTMPTestService</source>
         <scope>application</scope>
     </properties>
 </destination>

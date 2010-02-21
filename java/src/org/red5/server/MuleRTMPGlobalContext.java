@@ -20,24 +20,21 @@
 
 package org.red5.server;
 
-import org.red5.server.CoreHandler;
-import org.red5.server.api.IConnection;
-import org.red5.server.api.IContext;
-import org.red5.server.api.service.IServiceCall;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Field;
 
 
-public class MuleCoreHandler extends CoreHandler {
+public class MuleRTMPGlobalContext extends Context {
 
-    /**
-     * Remote method invocation
-     *
-     * @param conn Connection to invoke method on
-     * @param call Service call context
-     * @return true on success
-     */
-    public boolean serviceCall(IConnection conn, IServiceCall call) {
-        // never call anything here
-
-        return true;
+    @Override
+    public void setApplicationContext(ApplicationContext context) {
+        Field field = ReflectionUtils.findField(Context.class, "applicationContext");
+        field.setAccessible(true);
+        ReflectionUtils.setField(field, this, context);
+        Field field2 = ReflectionUtils.findField(Context.class, "coreContext");
+        field2.setAccessible(true);
+        ReflectionUtils.setField(field2, this, context.getParentBeanFactory());
     }
 }
