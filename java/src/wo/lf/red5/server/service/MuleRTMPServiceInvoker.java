@@ -90,11 +90,7 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker{
             if(arg0 instanceof flex.messaging.messages.CommandMessage) {
                 // handle command message
                 flex.messaging.messages.CommandMessage commandMessage = (flex.messaging.messages.CommandMessage) arg0;
-                FlexClient client = endpoint.setupFlexClient((String) commandMessage.getClientId());
-                // set the clientid into the message
-                commandMessage.setClientId(client.getId());
-                // set the endpoint id into the message
-                commandMessage.setHeader(Message.ENDPOINT_HEADER,endpoint.getId());
+                setUpFlexClientFromCommandMessage(commandMessage);
                 // route command to service
                 bResult = messageBroker.routeCommandToService((flex.messaging.messages.CommandMessage) arg0, endpoint).getSmallMessage();
             } else if (arg0 instanceof Message){
@@ -120,5 +116,14 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker{
             }
         }
         return true;
+    }
+
+    public void setUpFlexClientFromCommandMessage(flex.messaging.messages.CommandMessage commandMessage)
+    {
+          FlexClient client = endpoint.setupFlexClient((String) commandMessage.getClientId());
+          // set the clientid into the message
+          commandMessage.setClientId(client.getId());
+          // set the endpoint id into the message
+          commandMessage.setHeader(Message.ENDPOINT_HEADER,endpoint.getId());
     }
 }
