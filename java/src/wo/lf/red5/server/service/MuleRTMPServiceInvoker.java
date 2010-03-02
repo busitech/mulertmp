@@ -118,12 +118,14 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker{
         return true;
     }
 
-    public void setUpFlexClientFromCommandMessage(flex.messaging.messages.CommandMessage commandMessage)
+    public FlexClient setUpFlexClientFromCommandMessage(flex.messaging.messages.CommandMessage commandMessage)
     {
           FlexClient client = endpoint.setupFlexClient((String) commandMessage.getClientId());
           // set the clientid into the message
           commandMessage.setClientId(client.getId());
           // set the endpoint id into the message
           commandMessage.setHeader(Message.ENDPOINT_HEADER,endpoint.getId());
+
+          return client; 
     }
 }
