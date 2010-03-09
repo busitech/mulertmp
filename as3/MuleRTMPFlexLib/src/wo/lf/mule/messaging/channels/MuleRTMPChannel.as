@@ -18,12 +18,17 @@
  *
  */
 package wo.lf.mule.messaging.channels{
+	import flash.events.AsyncErrorEvent;
+	import flash.events.IOErrorEvent;
 	import flash.events.NetStatusEvent;
+	import flash.events.SecurityErrorEvent;
 	
 	import mx.core.mx_internal;
+	import mx.messaging.MessageAgent;
+	import mx.messaging.MessageResponder;
 	import mx.messaging.channels.NetConnectionChannel;
 	import mx.messaging.events.ChannelFaultEvent;
-	import mx.messaging.messages.IMessage;
+	import mx.messaging.messages.CommandMessage;
 	
 	use namespace mx_internal;
 	
@@ -32,6 +37,7 @@ package wo.lf.mule.messaging.channels{
 		public function MuleRTMPChannel(id:String=null, uri:String=null)
 		{
 			super(id, uri);
+			internalPollingEnabled = false;
 		}
 		
 		override public function enablePolling():void
@@ -90,5 +96,41 @@ package wo.lf.mule.messaging.channels{
 				
 			}
 		}
+		
+		override protected function securityErrorHandler(event:SecurityErrorEvent):void
+		{
+			super.securityErrorHandler( event);
+		}
+		
+		/**
+		 *  @private
+		 *  If there is a network problem, the NetConnection raises an
+		 *  ioError event which we dispatch as a channel fault.
+		 */
+		override protected function ioErrorHandler(event:IOErrorEvent):void
+		{
+			super.ioErrorHandler(event);
+		}
+		
+		/**
+		 *  @private
+		 *  If a problem arises in the native player code asynchronously, this
+		 *  error event will be dispatched as a channel fault.
+		 */
+		override protected function asyncErrorHandler(event:AsyncErrorEvent):void
+		{
+			super.asyncErrorHandler(event);
+		}
+		
+		override protected function internalConnect():void
+		{
+			super.internalConnect();
+		}
+		
+		override protected function getPollSyncMessageResponder(agent:MessageAgent, msg:CommandMessage) : MessageResponder
+		{
+			return super.getPollSyncMessageResponder(agent,msg);
+		}
+
 	}
 }
