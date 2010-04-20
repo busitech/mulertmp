@@ -19,52 +19,35 @@
  */
 package org.red5.server.net.rtmp.codec;
 
-import flex.messaging.io.MessageSerializer;
 import flex.messaging.io.SerializationContext;
-import flex.messaging.io.amf.*;
-import flex.messaging.messages.AcknowledgeMessage;
+import flex.messaging.io.amf.AbstractAmfOutput;
+import flex.messaging.io.amf.Amf0Output;
+import flex.messaging.io.amf.Amf3Output;
+import flex.messaging.messages.AsyncMessage;
 import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.compatibility.flex.messaging.messages.AbstractMessage;
-import org.red5.compatibility.flex.messaging.messages.ErrorMessage;
 import org.red5.io.amf.AMF;
-import org.red5.io.amf.Output;
-import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.Red5;
-import org.red5.server.api.remoting.IRemotingConnection;
-import org.red5.server.api.remoting.IRemotingHeader;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
-import org.red5.server.net.protocol.ProtocolState;
-import org.red5.server.net.remoting.FlexMessagingService;
-import org.red5.server.net.remoting.message.RemotingCall;
-import org.red5.server.net.remoting.message.RemotingPacket;
-import org.red5.server.net.rtmp.codec.RTMP;
-import org.red5.server.net.rtmp.codec.RTMPProtocolEncoder;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.status.StatusCodes;
 import org.red5.server.net.rtmp.status.StatusObject;
 import org.red5.server.service.Call;
-import org.red5.server.service.ServiceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMPProtocolEncoder {
 
-    public static SerializationContext serializationContext;
+    public static final String NO_TRANSACTION_HEADER = "NO_TRANSACTION";
 
-    private static final Logger log = LoggerFactory.getLogger(MuleRTMPMinaProtocolDecoder.class);
-
+    private static final Logger log = LoggerFactory.getLogger(MuleRTMPProtocolEncoder.class);
     private Serializer serializer;
 
     public void setSerializer(Serializer serializer) {
@@ -76,18 +59,19 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
         // TODO: tidy up here
         // log.debug("Encode invoke");
         AbstractAmfOutput blazeOutput;
+        SerializationContext serializationContext = MuleRTMPAMFEndpoint.getInstance().getSerializationContext();
         Amf3Output blazeAmf3Output = new Amf3Output(serializationContext);
-        Amf0Output blazeAmf0Output = new Amf0Output(serializationContext);;
+        Amf0Output blazeAmf0Output = new Amf0Output(serializationContext);
         ByteArrayOutputStream baOutput = new ByteArrayOutputStream();
         DataOutputStream dataOutStream = new DataOutputStream(baOutput);
 
         org.red5.io.object.Output output = new org.red5.io.amf.Output(out);
         final IServiceCall call = invoke.getCall();
         final boolean isPending = (call.getStatus() == Call.STATUS_PENDING);
-        log.debug("Call: {} pending: {}", call, isPending);
+//        log.debug("Call: {} pending: {}", call, isPending);
 
         if (!isPending) {
-            log.debug("Call has been executed, send result");
+            log.debug("Call has been executed, send result. success: " + call.isSuccess());
             serializer.serialize(output, call.isSuccess() ? "_result" : "_error"); // seems right
         } else {
             log.debug("This is a pending call, send request");
@@ -101,7 +85,12 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
             serializer.serialize(output, action); // seems right
         }
         if (invoke instanceof Invoke) {
-            serializer.serialize(output, Integer.valueOf(invoke.getInvokeId()));
+            Object[] args = call.getArguments();
+            if (args != null && args.length == 1 && args[0] instanceof AsyncMessage && ((AsyncMessage) args[0]).headerExists(NO_TRANSACTION_HEADER)) {
+                serializer.serialize(output, 0);
+            } else {
+                serializer.serialize(output, invoke.getInvokeId());
+            }
             serializer.serialize(output, invoke.getConnectionParams());
         }
 
@@ -119,7 +108,7 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
                 blazeOutput.setOutputStream(dataOutStream);
             }
         }
-        try{
+        try {
 
             if (!isPending && (invoke instanceof Invoke)) {
                 IPendingServiceCall pendingCall = (IPendingServiceCall) call;
@@ -132,8 +121,9 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
                 }
                 Object res = pendingCall.getResult();
                 log.debug("Writing result: {}", res);
-
-                blazeOutput.writeObject(res);
+                if (res != null) {
+                    blazeOutput.writeObject(res);
+                }
             } else {
                 log.debug("Writing params");
                 final Object[] args = call.getArguments();
@@ -146,15 +136,21 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
 
             dataOutStream.flush();
 
-        }catch(IOException ioException){
-            
+        } catch (IOException ioException) {
+            log.error("Upps", ioException);
         }
 
 
         // flush to buf
 
-        out.put(baOutput.toByteArray());
-        baOutput.reset();
+
+        try {
+            out.put(baOutput.toByteArray());
+            baOutput.reset();
+
+        } catch (Exception e) {
+            log.error("Caught exception", e);
+        }
 
         if (invoke.getData() != null) {
             out.setAutoExpand(true);

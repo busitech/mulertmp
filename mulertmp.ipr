@@ -72,6 +72,70 @@
   </component>
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
   <component name="IdProvider" IDEtalkID="D0E4C143DDF10F4F3F29645E87168303" />
+  <component name="InspectionProjectProfileManager">
+    <profiles>
+      <profile version="1.0" is_locked="false">
+        <option name="myName" value="Project Default" />
+        <option name="myLocal" value="false" />
+        <inspection_tool class="DuplicatedBeanNamesInspection" enabled="false" level="ERROR" enabled_by_default="false" />
+        <inspection_tool class="HibernateConfigDomInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="HibernateMappingDatasourceDomInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="HibernateMappingDomInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="JSUnresolvedFunction" enabled="false" level="INFO" enabled_by_default="false" />
+        <inspection_tool class="JSUnresolvedVariable" enabled="false" level="INFO" enabled_by_default="false" />
+        <inspection_tool class="JavaDoc" enabled="false" level="WARNING" enabled_by_default="false">
+          <option name="TOP_LEVEL_CLASS_OPTIONS">
+            <value>
+              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
+              <option name="REQUIRED_TAGS" value="" />
+            </value>
+          </option>
+          <option name="INNER_CLASS_OPTIONS">
+            <value>
+              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
+              <option name="REQUIRED_TAGS" value="" />
+            </value>
+          </option>
+          <option name="METHOD_OPTIONS">
+            <value>
+              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
+              <option name="REQUIRED_TAGS" value="@return@param@throws or @exception" />
+            </value>
+          </option>
+          <option name="FIELD_OPTIONS">
+            <value>
+              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
+              <option name="REQUIRED_TAGS" value="" />
+            </value>
+          </option>
+          <option name="IGNORE_DEPRECATED" value="false" />
+          <option name="IGNORE_JAVADOC_PERIOD" value="true" />
+          <option name="IGNORE_DUPLICATED_THROWS" value="false" />
+          <option name="myAdditionalJavadocTags" value="" />
+        </inspection_tool>
+        <inspection_tool class="JpaQlInspection" enabled="false" level="ERROR" enabled_by_default="false" />
+        <inspection_tool class="RedundantCast" enabled="false" level="WARNING" enabled_by_default="false" />
+        <inspection_tool class="SpringModelInspection" enabled="false" level="ERROR" enabled_by_default="false" />
+        <inspection_tool class="SqlAmbiguousColumnInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="SqlIdentifierInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="SqlInsertValuesInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="SqlResolveInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="SqlTypeInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+        <inspection_tool class="SynchronizationOnLocalVariableOrMethodParameter" enabled="false" level="WARNING" enabled_by_default="false">
+          <option name="reportLocalVariables" value="true" />
+          <option name="reportMethodParameters" value="true" />
+        </inspection_tool>
+        <inspection_tool class="ThrowableInstanceNeverThrown" enabled="false" level="WARNING" enabled_by_default="false" />
+        <inspection_tool class="UnnecessaryLocalVariable" enabled="false" level="WARNING" enabled_by_default="false">
+          <option name="m_ignoreImmediatelyReturnedVariables" value="false" />
+          <option name="m_ignoreAnnotatedVariables" value="false" />
+        </inspection_tool>
+      </profile>
+    </profiles>
+    <option name="PROJECT_PROFILE" value="Project Default" />
+    <option name="USE_PROJECT_PROFILE" value="true" />
+    <version value="1.0" />
+  </component>
   <component name="JavadocGenerationManager">
     <option name="OUTPUT_DIRECTORY" />
     <option name="OPTION_SCOPE" value="protected" />
@@ -230,7 +294,7 @@
       <module fileurl="file://$PROJECT_DIR$/java/Mulertmp.iml" filepath="$PROJECT_DIR$/java/Mulertmp.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="SvnBranchConfigurationManager">
@@ -252,58 +316,6 @@
   </component>
   <component name="WebServicesPlugin" addRequiredLibraries="true" />
   <component name="libraryTable">
-    <library name="lib-red5">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib-red5/tomcat-coyote-6.0.24.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/log4j-over-slf4j-1.5.10.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/catalina-6.0.24.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jaudiotagger-1.0.8.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/commons-collections-3.2.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/bcprov-jdk16-145.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/spring-asm-3.0.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jul-to-slf4j-1.5.10.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jasper-6.0.24.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/commons-codec-1.4.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/spring-expression-3.0.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/spring-core-3.0.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/quartz-1.6.5.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/commons-beanutils-1.8.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/tomcat-juli-slf4j-1.5.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/commons-pool-1.4.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/commons-modeler-2.0.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/slf4j-api-1.5.10.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jasper-jdt-6.0.24.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jcl-over-slf4j-1.5.10.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/mina-integration-jmx-2.0.0-RC1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/ehcache-1.6.2.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/mina-core-2.0.0-RC1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/commons-httpclient-3.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/spring-context-3.0.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/groovy-all-1.5.7.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/logback-classic-0.9.18.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jasper-el-6.0.24.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/spring-web-3.0.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/xmlrpc-2.0.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/asm-commons-3.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/logback-core-0.9.18.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/spring-context-support-3.0.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/mina-integration-beans-2.0.0-RC1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jython-2.5.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/spring-beans-3.0.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/red5.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/javaee-api-5.1.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/asm-3.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jruby-complete-1.1.6.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/xercesImpl-2.9.1.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/antlr-3.1.3.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/commons-lang-2.4.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib-red5/jruby-engine-1.1.6.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES>
-        <root url="file://$PROJECT_DIR$/red5-src/src" />
-      </SOURCES>
-    </library>
     <library name="lib-flash">
       <CLASSES />
       <JAVADOC />
@@ -571,6 +583,39 @@
       </JAVADOC>
       <SOURCES>
         <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.4/commons-codec-1.4-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.slf4j:slf4j-api:1.4.3">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.4.3/slf4j-api-1.4.3.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.4.3/slf4j-api-1.4.3-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.4.3/slf4j-api-1.4.3-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.red5:red5:0.9.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/red5/red5/0.9.1/red5-0.9.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/red5/red5/0.9.1/red5-0.9.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/red5/red5/0.9.1/red5-0.9.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.mina:mina-core:2.0.0-RC1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/mina/mina-core/2.0.0-RC1/mina-core-2.0.0-RC1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/mina/mina-core/2.0.0-RC1/mina-core-2.0.0-RC1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/mina/mina-core/2.0.0-RC1/mina-core-2.0.0-RC1-sources.jar!/" />
       </SOURCES>
     </library>
   </component>

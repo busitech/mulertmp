@@ -32,13 +32,12 @@ import org.red5.server.net.rtmp.event.FlexMessage;
 import org.red5.server.service.PendingCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder{
-
-    public static SerializationContext serializationContext;
+public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
 
     private static final Logger log = LoggerFactory.getLogger(MuleRTMPMinaProtocolDecoder.class);
 
@@ -58,6 +57,7 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder{
      */
     public FlexMessage decodeFlexMessage(IoBuffer in, RTMP rtmp) {
         AbstractAmfInput blazeInput;
+        SerializationContext serializationContext = MuleRTMPAMFEndpoint.getInstance().getSerializationContext();
         Amf3Input blazeAmf3Input = new Amf3Input(serializationContext);
         Amf0Input blazeAmf0Input = new Amf0Input(serializationContext);
 
@@ -99,12 +99,12 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder{
                     blazeInput.setInputStream(in.asInputStream());
                 }
                 //paramList.add(deserializer.deserialize(input, Object.class));
-                try{
+                try {
                     paramList.add(blazeInput.readObject());
-                }catch(IOException ioException){
+                } catch (IOException ioException) {
 
-                }catch(ClassNotFoundException noClassException){
-                    
+                } catch (ClassNotFoundException noClassException) {
+
                 }
             }
             params = paramList.toArray();
@@ -115,11 +115,11 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder{
                 }
             }
         }
-         /*    we need to change this because action is actually null for some reason
-        final int dotIndex = action.lastIndexOf('.');
-        String serviceName = (dotIndex == -1) ? null : action.substring(0, dotIndex);
-        String serviceMethod = (dotIndex == -1) ? action : action.substring(dotIndex + 1, action.length());
-         */
+        /*    we need to change this because action is actually null for some reason
+       final int dotIndex = action.lastIndexOf('.');
+       String serviceName = (dotIndex == -1) ? null : action.substring(0, dotIndex);
+       String serviceMethod = (dotIndex == -1) ? action : action.substring(dotIndex + 1, action.length());
+        */
         String serviceName = null;
         String serviceMethod = "mule";
 

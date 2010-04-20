@@ -20,9 +20,7 @@
 
 package org.red5.server;
 
-import org.red5.server.CoreHandler;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.IContext;
 import org.red5.server.api.service.IServiceCall;
 
 

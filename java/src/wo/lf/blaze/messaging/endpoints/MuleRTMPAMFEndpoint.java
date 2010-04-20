@@ -23,22 +23,24 @@ package wo.lf.blaze.messaging.endpoints;
 import flex.messaging.FlexContext;
 import flex.messaging.FlexSession;
 import flex.messaging.client.FlexClient;
+import flex.messaging.config.ConfigMap;
 import flex.messaging.endpoints.AMFEndpoint;
-import org.red5.server.net.rtmp.codec.MuleRTMPProtocolDecoder;
-import org.red5.server.net.rtmp.codec.MuleRTMPProtocolEncoder;
-import wo.lf.red5.server.service.MuleRTMPServiceInvoker;
 
-public class MuleRTMPAMFEndpoint extends AMFEndpoint{
-    public MuleRTMPAMFEndpoint(){
-        super();
-        MuleRTMPServiceInvoker.endpoint = this;
-        if(MuleRTMPProtocolEncoder.serializationContext == null){
-            MuleRTMPProtocolEncoder.serializationContext = serializationContext;
+public class MuleRTMPAMFEndpoint extends AMFEndpoint {
+
+    private static MuleRTMPAMFEndpoint instance;
+
+    public static MuleRTMPAMFEndpoint getInstance() {
+        return instance;
+    }
+
+    @Override
+    public void initialize(String id, ConfigMap properties) {
+        if (instance != null) {
+            throw new IllegalStateException("Endpoint should not be configured multiple times");
         }
-        if (MuleRTMPProtocolDecoder.serializationContext == null) {
-            MuleRTMPProtocolDecoder.serializationContext = serializationContext;
-        }
-     }
+        instance = this;
+    }
 
     /**
      * Utility method that endpoint implementations (or associated classes)
@@ -50,8 +52,9 @@ public class MuleRTMPAMFEndpoint extends AMFEndpoint{
      * @param id The FlexClient id value from the client.
      * @return The FlexClient or null if the provided id was null.
      */
+    @Override
     public FlexClient setupFlexClient(String id) {
-        FlexClient flexClient = null;
+        FlexClient flexClient;
 
         // This indicates that we're dealing with a non-legacy client that hasn't been
         // assigned a FlexClient Id yet. Reset to null to generate a fresh Id.
@@ -61,7 +64,7 @@ public class MuleRTMPAMFEndpoint extends AMFEndpoint{
         flexClient = getMessageBroker().getFlexClientManager().getFlexClient(id);
         // Make sure the FlexClient and FlexSession are associated.
         FlexSession session = FlexContext.getFlexSession();
-        
+
         flexClient.registerFlexSession(session);
         // And place the FlexClient in FlexContext for this request.
         FlexContext.setThreadLocalFlexClient(flexClient);

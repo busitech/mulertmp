@@ -22,7 +22,7 @@ package org.red5.server.net.rtmp;
 
 import wo.lf.blaze.messaging.MuleRTMPFlexSession;
 
-public class MuleRTMPMinaConnection extends RTMPMinaConnection{
+public class MuleRTMPMinaConnection extends RTMPMinaConnection {
     public MuleRTMPFlexSession getFlexSession() {
         return flexSession;
     }
@@ -36,7 +36,7 @@ public class MuleRTMPMinaConnection extends RTMPMinaConnection{
     @Override
     public void close() {
         super.close();
-        if(flexSession!=null){
+        if (flexSession != null) {
             flexSession.invalidate();
             flexSession = null;
         }

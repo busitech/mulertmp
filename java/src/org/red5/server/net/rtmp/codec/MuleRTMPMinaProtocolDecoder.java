@@ -24,8 +24,8 @@ import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 
-public class MuleRTMPMinaProtocolDecoder extends RTMPMinaProtocolDecoder{
-    public MuleRTMPMinaProtocolDecoder(){
+public class MuleRTMPMinaProtocolDecoder extends RTMPMinaProtocolDecoder {
+    public MuleRTMPMinaProtocolDecoder() {
         super();
         Field field = ReflectionUtils.findField(RTMPMinaProtocolDecoder.class, "decoder");
         field.setAccessible(true);

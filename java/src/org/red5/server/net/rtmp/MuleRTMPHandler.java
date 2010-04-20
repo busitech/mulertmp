@@ -20,14 +20,14 @@
 
 package org.red5.server.net.rtmp;
 
-import org.red5.server.api.*;
-import static org.red5.server.api.ScopeUtils.getScopeService;
+import org.red5.server.api.IConnection;
+import org.red5.server.api.IContext;
+import org.red5.server.api.IScope;
+import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
 import org.red5.server.api.stream.IStreamService;
 import org.red5.server.exception.ClientRejectedException;
-import org.red5.server.exception.ScopeNotFoundException;
-import org.red5.server.exception.ScopeShuttingDownException;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
@@ -38,11 +38,17 @@ import org.red5.server.net.rtmp.status.Status;
 import org.red5.server.net.rtmp.status.StatusObject;
 import org.red5.server.service.Call;
 import org.red5.server.stream.StreamService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MuleRTMPHandler extends RTMPHandler{
+import static org.red5.server.api.ScopeUtils.getScopeService;
+
+public class MuleRTMPHandler extends RTMPHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(MuleRTMPHandler.class);
 
     private IScope scope;
 
@@ -58,17 +64,17 @@ public class MuleRTMPHandler extends RTMPHandler{
      */
     protected void invokeCall(RTMPConnection conn, IServiceCall call) {
         final IScope scope = conn.getScope();
-       /*
-        if (scope.hasHandler()) {
-            final IScopeHandler handler = scope.getHandler();
-            log.debug("Scope: {}", scope);
-            log.debug("Handler: {}", handler);
-            if (!handler.serviceCall(conn, call)) {
-                // XXX: What to do here? Return an error?
-                return;
-            }
-        }
-       */
+        /*
+         if (scope.hasHandler()) {
+             final IScopeHandler handler = scope.getHandler();
+             log.debug("Scope: {}", scope);
+             log.debug("Handler: {}", handler);
+             if (!handler.serviceCall(conn, call)) {
+                 // XXX: What to do here? Return an error?
+                 return;
+             }
+         }
+        */
         final IContext context = scope.getContext();
         log.debug("Context: {}", context);
         context.getServiceInvoker().invoke(call, scope);
@@ -99,12 +105,13 @@ public class MuleRTMPHandler extends RTMPHandler{
     @Override
     protected void onInvoke(RTMPConnection conn, Channel channel, Header source, Notify invoke, RTMP rtmp) {
 
-        log.debug("Invoke: {}", invoke);
-
         // Get call
         final IServiceCall call = invoke.getCall();
         // method name
         final String action = call.getServiceMethodName();
+
+        log.debug("Invoke: {}", invoke);
+
 
         // If it's a callback for server remote call then pass it over to
         // callbacks handler and return
@@ -117,7 +124,6 @@ public class MuleRTMPHandler extends RTMPHandler{
 
         // If this is not a service call then handle connection...
         if (call.getServiceName() == null) {
-            log.debug("call: {}", call);
             if (!conn.isConnected() && StreamAction.CONNECT.equals(action)) {
                 // Handle connection
                 log.debug("connect");
@@ -148,57 +154,57 @@ public class MuleRTMPHandler extends RTMPHandler{
                     // Use host and application name
 
 
-                        if (scope != null) {
-                            log.info("Connecting to: {}", scope);
-                            boolean okayToConnect;
-                            try {
-                                log.debug("Conn {}, scope {}, call {}", new Object[]{conn, scope, call});
-                                log.debug("Call args {}", call.getArguments());
-                                if (call.getArguments() != null) {
-                                    okayToConnect = conn.connect(scope, call.getArguments());
-                                } else {
-                                    okayToConnect = conn.connect(scope);
+                    if (scope != null) {
+                        log.info("Connecting to: {}", scope);
+                        boolean okayToConnect;
+                        try {
+                            log.debug("Conn {}, scope {}, call {}", new Object[]{conn, scope, call});
+                            log.debug("Call args {}", call.getArguments());
+                            if (call.getArguments() != null) {
+                                okayToConnect = conn.connect(scope, call.getArguments());
+                            } else {
+                                okayToConnect = conn.connect(scope);
+                            }
+                            if (okayToConnect) {
+                                log.debug("Connected - Client: {}", conn.getClient());
+                                call.setStatus(Call.STATUS_SUCCESS_RESULT);
+                                if (call instanceof IPendingServiceCall) {
+                                    IPendingServiceCall pc = (IPendingServiceCall) call;
+                                    //send fmsver and capabilities
+                                    StatusObject result = getStatus(NC_CONNECT_SUCCESS);
+                                    result.setAdditional("fmsVer", Red5.getFMSVersion());
+                                    result.setAdditional("capabilities", Integer.valueOf(31));
+                                    pc.setResult(result);
                                 }
-                                if (okayToConnect) {
-                                    log.debug("Connected - Client: {}", conn.getClient());
-                                    call.setStatus(Call.STATUS_SUCCESS_RESULT);
-                                    if (call instanceof IPendingServiceCall) {
-                                        IPendingServiceCall pc = (IPendingServiceCall) call;
-                                        //send fmsver and capabilities
-                                        StatusObject result = getStatus(NC_CONNECT_SUCCESS);
-                                        result.setAdditional("fmsVer", Red5.getFMSVersion());
-                                        result.setAdditional("capabilities", Integer.valueOf(31));
-                                        pc.setResult(result);
-                                    }
-                                    // Measure initial roundtrip time after connecting
-                                    conn.ping(new Ping(Ping.STREAM_BEGIN, 0, -1));
-                                    conn.startRoundTripMeasurement();
-                                } else {
-                                    log.debug("Connect failed");
-                                    call.setStatus(Call.STATUS_ACCESS_DENIED);
-                                    if (call instanceof IPendingServiceCall) {
-                                        IPendingServiceCall pc = (IPendingServiceCall) call;
-                                        pc.setResult(getStatus(NC_CONNECT_REJECTED));
-                                    }
-                                    disconnectOnReturn = true;
-                                }
-                            } catch (ClientRejectedException rejected) {
-                                log.debug("Connect rejected");
+                                // Measure initial roundtrip time after connecting
+                                conn.ping(new Ping(Ping.STREAM_BEGIN, 0, -1));
+                                conn.startRoundTripMeasurement();
+                            } else {
+                                log.debug("Connect failed");
                                 call.setStatus(Call.STATUS_ACCESS_DENIED);
                                 if (call instanceof IPendingServiceCall) {
                                     IPendingServiceCall pc = (IPendingServiceCall) call;
-                                    StatusObject status = getStatus(NC_CONNECT_REJECTED);
-                                    Object reason = rejected.getReason();
-                                    if (reason != null) {
-                                        status.setApplication(reason);
-                                        //should we set description?
-                                        status.setDescription(reason.toString());
-                                    }
-                                    pc.setResult(status);
+                                    pc.setResult(getStatus(NC_CONNECT_REJECTED));
                                 }
                                 disconnectOnReturn = true;
                             }
+                        } catch (ClientRejectedException rejected) {
+                            log.debug("Connect rejected");
+                            call.setStatus(Call.STATUS_ACCESS_DENIED);
+                            if (call instanceof IPendingServiceCall) {
+                                IPendingServiceCall pc = (IPendingServiceCall) call;
+                                StatusObject status = getStatus(NC_CONNECT_REJECTED);
+                                Object reason = rejected.getReason();
+                                if (reason != null) {
+                                    status.setApplication(reason);
+                                    //should we set description?
+                                    status.setDescription(reason.toString());
+                                }
+                                pc.setResult(status);
+                            }
+                            disconnectOnReturn = true;
                         }
+                    }
                 } catch (RuntimeException e) {
                     call.setStatus(Call.STATUS_GENERAL_EXCEPTION);
                     if (call instanceof IPendingServiceCall) {
@@ -309,6 +315,7 @@ public class MuleRTMPHandler extends RTMPHandler{
             }
 
             if (sendResult) {
+                log.debug("Sending response via conn " + conn);
                 // The client expects a result for the method call.
                 Invoke reply = new Invoke();
                 reply.setCall(call);

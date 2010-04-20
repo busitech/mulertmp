@@ -24,9 +24,7 @@ import flex.messaging.FlexContext;
 import flex.messaging.MessageBroker;
 import flex.messaging.MessageException;
 import flex.messaging.client.FlexClient;
-import flex.messaging.io.SerializationContext;
-import flex.messaging.io.amf.Amf3Input;
-import flex.messaging.io.amf.Amf3Output;
+import flex.messaging.messages.CommandMessage;
 import flex.messaging.messages.ErrorMessage;
 import flex.messaging.messages.Message;
 import org.red5.server.api.IConnection;
@@ -34,43 +32,36 @@ import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
 import org.red5.server.net.rtmp.MuleRTMPMinaConnection;
-import org.red5.server.service.*;
+import org.red5.server.service.Call;
+import org.red5.server.service.ServiceInvoker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wo.lf.blaze.messaging.MuleRTMPFlexSession;
 import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
 
-import java.io.*;
+public class MuleRTMPServiceInvoker extends ServiceInvoker {
 
-public class MuleRTMPServiceInvoker extends ServiceInvoker{
+    private static final Logger log = LoggerFactory.getLogger(MuleRTMPServiceInvoker.class);
 
-    public static MuleRTMPAMFEndpoint endpoint;
-    /**
-     * Logger
-     */
-    private static final Logger log = LoggerFactory.getLogger(ServiceInvoker.class);
+    private MessageBroker messageBroker;
 
-    public MessageBroker getMessageBroker() {
-        return messageBroker;
-    }
+    private ExceptionTranslator exceptionTranslator = new ExceptionTranslator() {
+        @Override
+        public boolean handles(Class<?> clazz) {
+            return false;
+        }
 
-    public void setMessageBroker(MessageBroker messageBroker) {
-        this.messageBroker = messageBroker;
-    }
-
-    MessageBroker messageBroker;
+        @Override
+        public MessageException translate(Throwable t) {
+            return null;
+        }
+    };
 
     /**
      * {@inheritDoc}
      */
     public boolean invoke(IServiceCall call, Object service) {
         IConnection conn = Red5.getConnectionLocal();
-        String methodName = call.getServiceMethodName();
-
-        Object[] args = call.getArguments();
-        Object[] argsWithConnection;
-        Object arg0 = args[0];
-        Object bResult = null;
 
         // create a flex session if needed and associate flex session with connection for pushing messages to the client
         // finally set the flexSesssion as threadlocal
@@ -80,53 +71,88 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker{
                 flexSession = new MuleRTMPFlexSession();
                 ((MuleRTMPMinaConnection) conn).setFlexSession(flexSession);
                 flexSession.setConnection(((MuleRTMPMinaConnection) conn));
-            }else{
+
+            } else {
                 flexSession = ((MuleRTMPMinaConnection) conn).getFlexSession();
             }
+
             FlexContext.setThreadLocalSession(flexSession);
+
+        } else {
+            throw new RuntimeException();
         }
 
-        try{
-            if(arg0 instanceof flex.messaging.messages.CommandMessage) {
+        Message message = (Message) call.getArguments()[0];
+        try {
+            Object bResult;
+
+            if (message instanceof CommandMessage) {
                 // handle command message
-                flex.messaging.messages.CommandMessage commandMessage = (flex.messaging.messages.CommandMessage) arg0;
+                CommandMessage commandMessage = (CommandMessage) message;
                 setUpFlexClientFromMessage(commandMessage);
                 // route command to service
-                bResult = messageBroker.routeCommandToService((flex.messaging.messages.CommandMessage) arg0, endpoint).getSmallMessage();
-            } else if (arg0 instanceof Message){
-                setUpFlexClientFromMessage((Message) arg0);
+                bResult = messageBroker.routeCommandToService((CommandMessage) message, MuleRTMPAMFEndpoint.getInstance()).getSmallMessage();
+
+            } else {
+                setUpFlexClientFromMessage(message);
                 // route async message to service
-                bResult = messageBroker.routeMessageToService((Message) arg0, endpoint).getSmallMessage();
+                bResult = messageBroker.routeMessageToService(message, MuleRTMPAMFEndpoint.getInstance()).getSmallMessage();
             }
 
-            call.setStatus(bResult == null ? Call.STATUS_SUCCESS_NULL
-                    : Call.STATUS_SUCCESS_RESULT);
+            call.setStatus(bResult == null ? Call.STATUS_SUCCESS_NULL : Call.STATUS_SUCCESS_RESULT);
             if (call instanceof IPendingServiceCall) {
                 ((IPendingServiceCall) call).setResult(bResult);
             }
-        }catch(MessageException e){
 
+        } catch (MessageException e) {
             if (call instanceof IPendingServiceCall) {
                 ErrorMessage errorMessage = e.getErrorMessage();
-                errorMessage.setCorrelationId(((Message) arg0).getMessageId());
+                errorMessage.setCorrelationId(message.getMessageId());
 
                 ((IPendingServiceCall) call).setResult(errorMessage);
                 call.setStatus(Call.STATUS_GENERAL_EXCEPTION);
-
-                return false;
             }
+            return false;
+
+        } catch (Throwable e) {
+            if (call instanceof IPendingServiceCall) {
+                MessageException messageException;
+                if (exceptionTranslator.handles(e.getClass())) {
+                    messageException = exceptionTranslator.translate(e);
+
+                } else {
+                    messageException = new MessageException(e);
+                }
+
+                ErrorMessage errorMessage = messageException.getErrorMessage();
+                errorMessage.setCorrelationId(message.getMessageId());
+
+                ((IPendingServiceCall) call).setResult(errorMessage);
+                call.setStatus(Call.STATUS_GENERAL_EXCEPTION);
+            }
+            return false;
+
         }
         return true;
     }
 
-    protected FlexClient setUpFlexClientFromMessage(flex.messaging.messages.Message commandMessage)
-    {
-          FlexClient client = endpoint.setupFlexClient((String) commandMessage.getClientId());
-          // set the clientid into the message
-          commandMessage.setClientId(client.getId());
-          // set the endpoint id into the message
-          commandMessage.setHeader(Message.ENDPOINT_HEADER,endpoint.getId());
+    protected FlexClient setUpFlexClientFromMessage(flex.messaging.messages.Message commandMessage) {
+        MuleRTMPAMFEndpoint endpoint = MuleRTMPAMFEndpoint.getInstance();
+        FlexClient client = endpoint.setupFlexClient((String) commandMessage.getClientId());
+        // set the clientid into the message
+        commandMessage.setClientId(client.getId());
+        // set the endpoint id into the message
+        commandMessage.setHeader(Message.ENDPOINT_HEADER, endpoint.getId());
 
-          return client; 
+        return client;
+    }
+
+
+    public void setMessageBroker(MessageBroker messageBroker) {
+        this.messageBroker = messageBroker;
+    }
+
+    public void setExceptionTranslator(ExceptionTranslator exceptionTranslator) {
+        this.exceptionTranslator = exceptionTranslator;
     }
 }

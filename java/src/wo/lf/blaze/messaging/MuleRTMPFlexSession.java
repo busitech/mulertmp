@@ -24,15 +24,20 @@ import flex.messaging.NonHttpFlexSession;
 import flex.messaging.messages.Message;
 import org.red5.server.api.service.ServiceUtils;
 import org.red5.server.net.rtmp.MuleRTMPMinaConnection;
+import org.red5.server.net.rtmp.codec.MuleRTMPProtocolEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-public class MuleRTMPFlexSession extends NonHttpFlexSession{
+public class MuleRTMPFlexSession extends NonHttpFlexSession {
+
+    private static final Logger log = LoggerFactory.getLogger(MuleRTMPFlexSession.class);
 
     private String id;
 
     public MuleRTMPFlexSession() {
-          id = UUID.randomUUID().toString();
+        id = UUID.randomUUID().toString();
     }
 
 
@@ -45,18 +50,19 @@ public class MuleRTMPFlexSession extends NonHttpFlexSession{
      * @param message The message to push.
      * @exclude FlexClient invokes this to push a message to a remote client.
      */
+    @Override
     public void push(Message message) {
-        ServiceUtils.invokeOnConnection(connection,"receive", new Object[]{message});
+        log.debug("Pushing message " + message + " via connection " + connection);
+        message.setHeader(MuleRTMPProtocolEncoder.NO_TRANSACTION_HEADER, true);
+        ServiceUtils.invokeOnConnection(connection, "receive", new Object[]{message});
     }
 
     @Override
-    public String getId()
-    {
+    public String getId() {
         return id;
     }
 
-    public MuleRTMPMinaConnection getConnection()
-    {
+    public MuleRTMPMinaConnection getConnection() {
         return connection;
     }
 
@@ -67,10 +73,11 @@ public class MuleRTMPFlexSession extends NonHttpFlexSession{
     MuleRTMPMinaConnection connection;
 
     @Override
-    protected void internalInvalidate()
-    {
-        if(connection != null){
-            connection.setFlexSession( null );
+    protected void internalInvalidate() {
+        log.debug("Invalidating session");
+        if (connection != null) {
+            log.debug("Closing connection {}", connection);
+            connection.setFlexSession(null);
             connection.close();
             connection = null;
         }

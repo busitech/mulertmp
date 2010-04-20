@@ -20,20 +20,16 @@
 
 package org.red5.server;
 
-import org.red5.server.adapter.ApplicationAdapter;
-import org.red5.server.api.*;
-import org.springframework.context.ApplicationContextAware;
+import org.red5.server.api.IConnection;
 
 
 public class MuleRTMPScope extends Scope {
 
-    
 
     @Override
     public boolean connect(IConnection conn, Object[] params) {
-        return super.connect(conn, params);    //To change body of overridden methods use File | Settings | File Templates.
+        return super.connect(conn, params);
     }
 
-    
 
 }
