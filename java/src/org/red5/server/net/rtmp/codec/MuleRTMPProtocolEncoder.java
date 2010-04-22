@@ -85,12 +85,7 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
             serializer.serialize(output, action); // seems right
         }
         if (invoke instanceof Invoke) {
-            Object[] args = call.getArguments();
-            if (args != null && args.length == 1 && args[0] instanceof AsyncMessage && ((AsyncMessage) args[0]).headerExists(NO_TRANSACTION_HEADER)) {
-                serializer.serialize(output, 0);
-            } else {
-                serializer.serialize(output, invoke.getInvokeId());
-            }
+            serializer.serialize(output, invoke.getInvokeId());
             serializer.serialize(output, invoke.getConnectionParams());
         }
 
