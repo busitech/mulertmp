@@ -774,14 +774,6 @@
         <root url="jar://$MAVEN_REPOSITORY$/jboss/javassist/3.7.ga/javassist-3.7.ga-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="external">
-      <CLASSES>
-        <root url="file://E:/mulertmp2/lib-red5" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-      <jarDirectory url="file://E:/mulertmp2/lib-red5" recursive="false" />
-    </library>
     <library name="Maven: org.bouncycastle:bcprov-ext-jdk16:1.45">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/org/bouncycastle/bcprov-ext-jdk16/1.45/bcprov-ext-jdk16-1.45.jar!/" />
