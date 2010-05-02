@@ -43,7 +43,11 @@ package wo.lf.mule.messaging.channels{
 		override public function enablePolling():void
 		{
 		}
-		
+
+        override public function disablePolling():void
+		{
+		}
+
 		override protected function timerRequired():Boolean
 		{
 			return false;
@@ -96,41 +100,5 @@ package wo.lf.mule.messaging.channels{
 				
 			}
 		}
-		
-		override protected function securityErrorHandler(event:SecurityErrorEvent):void
-		{
-			super.securityErrorHandler( event);
-		}
-		
-		/**
-		 *  @private
-		 *  If there is a network problem, the NetConnection raises an
-		 *  ioError event which we dispatch as a channel fault.
-		 */
-		override protected function ioErrorHandler(event:IOErrorEvent):void
-		{
-			super.ioErrorHandler(event);
-		}
-		
-		/**
-		 *  @private
-		 *  If a problem arises in the native player code asynchronously, this
-		 *  error event will be dispatched as a channel fault.
-		 */
-		override protected function asyncErrorHandler(event:AsyncErrorEvent):void
-		{
-			super.asyncErrorHandler(event);
-		}
-		
-		override protected function internalConnect():void
-		{
-			super.internalConnect();
-		}
-		
-		override protected function getPollSyncMessageResponder(agent:MessageAgent, msg:CommandMessage) : MessageResponder
-		{
-			return super.getPollSyncMessageResponder(agent,msg);
-		}
-
 	}
 }
