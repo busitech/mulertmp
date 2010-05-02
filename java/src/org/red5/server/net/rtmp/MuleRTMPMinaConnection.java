@@ -54,6 +54,7 @@ public class MuleRTMPMinaConnection extends RTMPMinaConnection {
             Object[] args = call.getArguments();
             if (args != null && args.length == 1 && args[0] instanceof AsyncMessage && ((AsyncMessage) args[0]).headerExists(MuleRTMPProtocolEncoder.NO_TRANSACTION_HEADER)) {
                 invoke.setInvokeId(0);
+                ((AsyncMessage) args[0]).setHeader(MuleRTMPProtocolEncoder.NO_TRANSACTION_HEADER,null);
             }else{
                 invoke.setInvokeId(getInvokeId());
             }
