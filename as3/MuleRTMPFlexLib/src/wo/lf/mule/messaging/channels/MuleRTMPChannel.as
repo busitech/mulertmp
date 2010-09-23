@@ -80,7 +80,7 @@ package wo.lf.mule.messaging.channels{
 						disconnectSuccess(true);
 						break;
 					case "NetConnection.Connect.Failed":
-						var faultEvent:ChannelFaultEvent = ChannelFaultEvent.createEvent(this, false, null, "error", event.info + " url: '" + endpoint + "'");
+						var faultEvent:ChannelFaultEvent = ChannelFaultEvent.createEvent(this, false, null, "Channel.Connect.Failed", event.info + " url: '" + endpoint + "'");
 						faultEvent.rootCause = event;
 						connectFailed(faultEvent);
 						break;
