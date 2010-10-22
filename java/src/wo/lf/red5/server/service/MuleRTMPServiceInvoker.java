@@ -93,11 +93,14 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker {
                 // route command to service
                 bResult = messageBroker.routeCommandToService((CommandMessage) message, MuleRTMPAMFEndpoint.getInstance()).getSmallMessage();
 
-            } else {
+            } else if(message instanceof Message) {
                 setUpFlexClientFromMessage(message);
                 // route async message to service
                 bResult = messageBroker.routeMessageToService(message, MuleRTMPAMFEndpoint.getInstance()).getSmallMessage();
-            }
+            }else{
+				bResult = null;
+			}
+			
 
             call.setStatus(bResult == null ? Call.STATUS_SUCCESS_NULL : Call.STATUS_SUCCESS_RESULT);
             if (call instanceof IPendingServiceCall) {
@@ -136,13 +139,13 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker {
         return true;
     }
 
-    protected FlexClient setUpFlexClientFromMessage(flex.messaging.messages.Message commandMessage) {
+    protected FlexClient setUpFlexClientFromMessage(flex.messaging.messages.Message message) {
         MuleRTMPAMFEndpoint endpoint = MuleRTMPAMFEndpoint.getInstance();
-        FlexClient client = endpoint.setupFlexClient((String) commandMessage.getClientId());
+        FlexClient client = endpoint.setupFlexClient((String) message.getClientId());
         // set the clientid into the message
-        commandMessage.setClientId(client.getId());
+        message.setClientId(client.getId());
         // set the endpoint id into the message
-        commandMessage.setHeader(Message.ENDPOINT_HEADER, endpoint.getId());
+        message.setHeader(Message.ENDPOINT_HEADER, endpoint.getId());
 
         return client;
     }
