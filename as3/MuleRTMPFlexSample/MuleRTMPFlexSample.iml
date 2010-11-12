@@ -13,7 +13,7 @@
         <option name="APPLICATION_ENTRY_POINT" value="" />
         <option name="MAIN_CLASS" value="MuleRTMPFlexSample" />
         <option name="OUTPUT_FILE_NAME" value="MuleRTMPFlexSample.swf" />
-        <option name="USE_FACET_COMPILE_OUTPUT_PATH" value="true" />
+        <option name="USE_FACET_COMPILE_OUTPUT_PATH" value="false" />
         <option name="FACET_COMPILE_OUTPUT_PATH" value="E:\anothernewmule\java-sample-web\web" />
         <option name="INCLUDE_RESOURCE_FILES_IN_SWC" value="false" />
         <option name="TARGET_PLAYER_VERSION" value="9.0.124" />
