@@ -18,12 +18,12 @@
  *
  */
 
-package wo.lf.blaze.service;
+package wo.lf.service.demo;
 
 public class MuleRTMPTestService {
     public String helloWorld()
     {
-         return "hello world from mule";
+         return "Hello world from MuleRTMP";
     }
 
     public String faultNullPointer() {
