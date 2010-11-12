@@ -72,8 +72,8 @@
     <orderEntry type="library" exported="" name="Maven: ognl:ognl:2.7.2" level="project" />
     <orderEntry type="library" exported="" name="Maven: jboss:javassist:3.7.ga" level="project" />
     <orderEntry type="library" exported="" name="Maven: org.bouncycastle:bcprov-ext-jdk16:1.45" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.red5:red5:0.9.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: quartz:quartz:1.6.5" level="project" />
+    <orderEntry type="library" exported="" name="Maven: org.red5:red5:0.9.1" level="project" />
+    <orderEntry type="library" exported="" name="Maven: org.quartz-scheduler:quartz:1.6.6" level="project" />
   </component>
 </module>
 

@@ -20,6 +20,7 @@
 
 package wo.lf.blaze.messaging;
 
+import flex.messaging.FlexSession;
 import flex.messaging.NonHttpFlexSession;
 import flex.messaging.messages.Message;
 import org.red5.server.api.service.ServiceUtils;
@@ -30,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-public class MuleRTMPFlexSession extends NonHttpFlexSession {
+public class MuleRTMPFlexSession extends FlexSession {
 
     private static final Logger log = LoggerFactory.getLogger(MuleRTMPFlexSession.class);
 
