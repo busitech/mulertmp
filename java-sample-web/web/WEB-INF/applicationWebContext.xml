@@ -7,16 +7,16 @@
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
        http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context-2.5
+       http://www.springframework.org/schema/context/spring-context-2.5.xsd
        http://www.springframework.org/schema/flex
-       http://www.springframework.org/schema/flex/spring-flex-1.0.xsd">
+       http://www.springframework.org/schema/flex/spring-flex-1.5.xsd">
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations" value="WEB-INF/red5.properties"/>
     </bean>
     <bean id="schedulingService" class="org.red5.server.scheduling.QuartzSchedulingService"/>
     <!-- Maps request paths at /* to the BlazeDS MessageBroker -->
-    <flex:message-broker id="_messageBroker" services-config-path="/WEB-INF/flex/services-config.xml" />
+    <flex:message-broker id="_messageBroker" services-config-path="/WEB-INF/flex/services-config.xml"/>
 
     <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="mappings">
@@ -29,18 +29,18 @@
     <bean id="global.handler" class="org.red5.server.MuleRTMPCoreHandler"/>
 
     <bean id="mule.serviceInvoker" class="wo.lf.red5.server.service.MuleRTMPServiceInvoker">
-        <property name="messageBroker" ref="_messageBroker" />  
+        <property name="messageBroker" ref="_messageBroker"/>
     </bean>
 
-    <bean id="clientRegistry" class="org.red5.server.ClientRegistry" />
+    <bean id="clientRegistry" class="org.red5.server.ClientRegistry"/>
     <bean id="globalContext" class="org.red5.server.MuleRTMPGlobalContext">
-        <property name="clientRegistry" ref="clientRegistry" />
-        <property name="serviceInvoker" ref="mule.serviceInvoker" />
+        <property name="clientRegistry" ref="clientRegistry"/>
+        <property name="serviceInvoker" ref="mule.serviceInvoker"/>
     </bean>
 
     <bean id="globalScope" class="org.red5.server.Scope" init-method="init">
         <property name="context" ref="globalContext"/>
-        <property name="handler" ref="global.handler" />
+        <property name="handler" ref="global.handler"/>
     </bean>
 
     <bean id="rtmpMinaConnManager" class="org.red5.server.net.rtmp.RTMPConnManager"/>
@@ -48,10 +48,10 @@
     <bean id="rtmpHandler" class="org.red5.server.net.rtmp.MuleRTMPHandler">
         <property name="statusObjectService">
             <bean class="org.red5.server.net.rtmp.status.StatusObjectService" init-method="initialize">
-                <property name="serializer" ref="serializer" />
+                <property name="serializer" ref="serializer"/>
             </bean>
         </property>
-        
+
         <property name="globalScope" ref="globalScope"/>
 
     </bean>
