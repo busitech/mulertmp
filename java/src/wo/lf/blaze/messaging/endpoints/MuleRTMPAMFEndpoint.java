@@ -20,8 +20,10 @@
 
 package wo.lf.blaze.messaging.endpoints;
 
+import wo.lf.blaze.messaging.MuleRTMPFlexSession;
 import flex.messaging.FlexContext;
 import flex.messaging.FlexSession;
+import flex.messaging.FlexSessionManager;
 import flex.messaging.client.FlexClient;
 import flex.messaging.config.ConfigMap;
 import flex.messaging.endpoints.AMFEndpoint;
@@ -33,7 +35,21 @@ public class MuleRTMPAMFEndpoint extends AMFEndpoint {
     public static MuleRTMPAMFEndpoint getInstance() {
         return instance;
     }
-
+    
+    public MuleRTMPFlexSessionProvider sessionProvider;
+    
+    @Override 
+    public void start() {
+    	if(isStarted())
+    		return;
+    	FlexSessionManager sessionManager = getMessageBroker().getFlexSessionManager();    	
+    	if(sessionProvider == null) {
+    		sessionProvider = new MuleRTMPFlexSessionProvider();
+    		sessionManager.registerFlexSessionProvider(MuleRTMPFlexSession.class, sessionProvider);
+    	}
+    	super.start();
+    }
+    
     @Override
     public void initialize(String id, ConfigMap properties) {
         if (instance != null) {
@@ -69,5 +85,8 @@ public class MuleRTMPAMFEndpoint extends AMFEndpoint {
         // And place the FlexClient in FlexContext for this request.
         FlexContext.setThreadLocalFlexClient(flexClient);
         return flexClient;
+        
+        
     }
+        
 }

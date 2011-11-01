@@ -20,12 +20,13 @@
 
 package org.red5.server.net.rtmp.codec;
 
+import flex.messaging.io.MessageDeserializer;
 import flex.messaging.io.SerializationContext;
-import flex.messaging.io.amf.AbstractAmfInput;
-import flex.messaging.io.amf.Amf0Input;
-import flex.messaging.io.amf.Amf3Input;
+import flex.messaging.io.TypeMarshallingContext;
+import flex.messaging.io.amf.AmfTrace;
+import flex.messaging.util.ClassUtil;
+
 import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.io.amf.AMF;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Input;
 import org.red5.server.net.rtmp.event.FlexMessage;
@@ -56,10 +57,11 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
      * @return FlexMessage event
      */
     public FlexMessage decodeFlexMessage(IoBuffer in, RTMP rtmp) {
-        AbstractAmfInput blazeInput;
+    	AmfTrace trace = new AmfTrace();
+    	TypeMarshallingContext.setTypeMarshaller(MuleRTMPAMFEndpoint.getInstance().getTypeMarshaller());
         SerializationContext serializationContext = MuleRTMPAMFEndpoint.getInstance().getSerializationContext();
-        Amf3Input blazeAmf3Input = new Amf3Input(serializationContext);
-        Amf0Input blazeAmf0Input = new Amf0Input(serializationContext);
+        MessageDeserializer blazeDeserializer = (MessageDeserializer)ClassUtil.createDefaultInstance(serializationContext.getDeserializerClass(), MessageDeserializer.class);
+        blazeDeserializer.initialize(serializationContext, in.asInputStream(),  trace);
 
         // TODO: Unknown byte, probably encoding as with Flex SOs?
         in.skip(1);
@@ -84,23 +86,8 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
             }
 
             while (in.hasRemaining()) {
-                // Check for AMF3 encoding of parameters
-                byte tmp = in.get();
-
-                if (tmp == AMF.TYPE_AMF3_OBJECT) {
-                    // The next parameter is encoded using AMF3
-                    blazeInput = blazeAmf3Input;
-                    blazeInput.setInputStream(in.asInputStream());
-                } else {
-                    // rewind one byte only if we are speaking amf0
-                    in.position(in.position() - 1);
-                    // The next parameter is encoded using AMF0
-                    blazeInput = blazeAmf0Input;
-                    blazeInput.setInputStream(in.asInputStream());
-                }
-                //paramList.add(deserializer.deserialize(input, Object.class));
                 try {
-                    paramList.add(blazeInput.readObject());
+                    paramList.add(blazeDeserializer.readObject());
                 } catch (IOException ioException) {
 
                 } catch (ClassNotFoundException noClassException) {
@@ -125,6 +112,8 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
 
         PendingCall call = new PendingCall(serviceName, serviceMethod, params);
         msg.setCall(call);
+        System.out.println(trace.toString());
         return msg;
+        
     }
 }

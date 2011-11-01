@@ -19,13 +19,14 @@
  */
 package org.red5.server.net.rtmp.codec;
 
+import flex.messaging.io.MessageIOConstants;
+import flex.messaging.io.MessageSerializer;
 import flex.messaging.io.SerializationContext;
-import flex.messaging.io.amf.AbstractAmfOutput;
-import flex.messaging.io.amf.Amf0Output;
-import flex.messaging.io.amf.Amf3Output;
-import flex.messaging.messages.AsyncMessage;
+import flex.messaging.io.TypeMarshallingContext;
+import flex.messaging.io.amf.AmfTrace;
+import flex.messaging.util.ClassUtil;
+
 import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.io.amf.AMF;
 import org.red5.io.object.Serializer;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.service.IPendingServiceCall;
@@ -58,13 +59,14 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
     protected void encodeNotifyOrInvoke(IoBuffer out, Notify invoke, RTMP rtmp) {
         // TODO: tidy up here
         // log.debug("Encode invoke");
-        AbstractAmfOutput blazeOutput;
         SerializationContext serializationContext = MuleRTMPAMFEndpoint.getInstance().getSerializationContext();
-        Amf3Output blazeAmf3Output = new Amf3Output(serializationContext);
-        Amf0Output blazeAmf0Output = new Amf0Output(serializationContext);
+        TypeMarshallingContext.setTypeMarshaller(MuleRTMPAMFEndpoint.getInstance().getTypeMarshaller());
         ByteArrayOutputStream baOutput = new ByteArrayOutputStream();
         DataOutputStream dataOutStream = new DataOutputStream(baOutput);
 
+        AmfTrace trace = new AmfTrace();
+        MessageSerializer blazeSerializer = (MessageSerializer)ClassUtil.createDefaultInstance(serializationContext.getSerializerClass(), MessageSerializer.class);        
+        
         org.red5.io.object.Output output = new org.red5.io.amf.Output(out);
         final IServiceCall call = invoke.getCall();
         final boolean isPending = (call.getStatus() == Call.STATUS_PENDING);
@@ -91,20 +93,17 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
 
         if (call.getServiceName() == null && "connect".equals(call.getServiceMethodName())) {
             // Response to initial connect, always use AMF0
-            blazeOutput = new Amf0Output(serializationContext);
-            blazeOutput.setOutputStream(dataOutStream);
+        	//blazeSerializer.setVersion(MessageIOConstants.AMF0);
         } else {
             if (rtmp.getEncoding() == IConnection.Encoding.AMF3) {
-                blazeOutput = blazeAmf3Output;
-                blazeOutput.setOutputStream(dataOutStream);
-                out.put(AMF.TYPE_AMF3_OBJECT);
+                //out.put(AMF.TYPE_AMF3_OBJECT);
+            	blazeSerializer.setVersion(MessageIOConstants.AMF3);
             } else {
-                blazeOutput = blazeAmf0Output;
-                blazeOutput.setOutputStream(dataOutStream);
+            	//blazeSerializer.setVersion(MessageIOConstants.AMF0);
             }
         }
         try {
-
+        	blazeSerializer.initialize(serializationContext, dataOutStream, trace);
             if (!isPending && (invoke instanceof Invoke)) {
                 IPendingServiceCall pendingCall = (IPendingServiceCall) call;
                 if (!call.isSuccess()) {
@@ -116,21 +115,22 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
                 }
                 Object res = pendingCall.getResult();
                 log.debug("Writing result: {}", res);
-                if (res != null) {
-                    blazeOutput.writeObject(res);
+                if (res != null) {                	
+                    blazeSerializer.writeObject(res);
                 }
             } else {
                 log.debug("Writing params");
                 final Object[] args = call.getArguments();
                 if (args != null) {
                     for (Object element : args) {
-                        blazeOutput.writeObject(element);
+                    	blazeSerializer.writeObject(element);
                     }
                 }
             }
 
             dataOutStream.flush();
 
+            System.out.println(trace.toString());
         } catch (IOException ioException) {
             log.error("Upps", ioException);
         }

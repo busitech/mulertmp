@@ -20,8 +20,7 @@
 
 package wo.lf.blaze.messaging;
 
-import flex.messaging.FlexSession;
-import flex.messaging.NonHttpFlexSession;
+import flex.messaging.AbstractConnectionAwareSession;
 import flex.messaging.messages.Message;
 import org.red5.server.api.service.ServiceUtils;
 import org.red5.server.net.rtmp.MuleRTMPMinaConnection;
@@ -29,16 +28,20 @@ import org.red5.server.net.rtmp.codec.MuleRTMPProtocolEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import wo.lf.blaze.messaging.endpoints.MuleRTMPFlexSessionProvider;
+
 import java.util.UUID;
 
-public class MuleRTMPFlexSession extends FlexSession {
+public class MuleRTMPFlexSession extends AbstractConnectionAwareSession {
 
     private static final Logger log = LoggerFactory.getLogger(MuleRTMPFlexSession.class);
 
     private String id;
-
-    public MuleRTMPFlexSession() {
+   
+	public MuleRTMPFlexSession(MuleRTMPFlexSessionProvider sessionProvider) {
+		super(sessionProvider);		
         id = UUID.randomUUID().toString();
+        notifyCreated();
     }
 
 
@@ -83,4 +86,5 @@ public class MuleRTMPFlexSession extends FlexSession {
             connection = null;
         }
     }
+
 }

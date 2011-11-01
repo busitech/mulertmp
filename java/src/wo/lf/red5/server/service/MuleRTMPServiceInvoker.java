@@ -68,10 +68,8 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker {
         if (conn instanceof MuleRTMPMinaConnection) {
             MuleRTMPFlexSession flexSession;
             if (((MuleRTMPMinaConnection) conn).getFlexSession() == null) {
-                flexSession = new MuleRTMPFlexSession();
+                flexSession = MuleRTMPAMFEndpoint.getInstance().sessionProvider.createSession((MuleRTMPMinaConnection) conn);
                 ((MuleRTMPMinaConnection) conn).setFlexSession(flexSession);
-                flexSession.setConnection(((MuleRTMPMinaConnection) conn));
-
             } else {
                 flexSession = ((MuleRTMPMinaConnection) conn).getFlexSession();
             }
