@@ -19,12 +19,9 @@
  */
 package org.red5.server.net.rtmp.codec;
 
-import flex.messaging.io.MessageIOConstants;
-import flex.messaging.io.MessageSerializer;
-import flex.messaging.io.SerializationContext;
-import flex.messaging.io.TypeMarshallingContext;
-import flex.messaging.io.amf.AmfTrace;
-import flex.messaging.util.ClassUtil;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.object.Serializer;
@@ -38,11 +35,16 @@ import org.red5.server.net.rtmp.status.StatusObject;
 import org.red5.server.service.Call;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
+import flex.messaging.io.MessageIOConstants;
+import flex.messaging.io.MessageSerializer;
+import flex.messaging.io.SerializationContext;
+import flex.messaging.io.TypeMarshallingContext;
+import flex.messaging.io.amf.AmfTrace;
+import flex.messaging.log.Log;
+import flex.messaging.log.LogCategories;
+import flex.messaging.util.ClassUtil;
 
 public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMPProtocolEncoder {
 
@@ -64,7 +66,10 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
         ByteArrayOutputStream baOutput = new ByteArrayOutputStream();
         DataOutputStream dataOutStream = new DataOutputStream(baOutput);
 
-        AmfTrace trace = new AmfTrace();
+        AmfTrace trace = null;
+        if (Log.isDebug())
+        	trace = new AmfTrace();
+
         MessageSerializer blazeSerializer = (MessageSerializer)ClassUtil.createDefaultInstance(serializationContext.getSerializerClass(), MessageSerializer.class);        
         
         org.red5.io.object.Output output = new org.red5.io.amf.Output(out);
@@ -129,8 +134,8 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
             }
 
             dataOutStream.flush();
-
-            System.out.println(trace.toString());
+            if (Log.isDebug())
+            	Log.getLogger(LogCategories.ENDPOINT_AMF).debug(trace.toString());            	
         } catch (IOException ioException) {
             log.error("Upps", ioException);
         }

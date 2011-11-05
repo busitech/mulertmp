@@ -24,6 +24,8 @@ import flex.messaging.io.MessageDeserializer;
 import flex.messaging.io.SerializationContext;
 import flex.messaging.io.TypeMarshallingContext;
 import flex.messaging.io.amf.AmfTrace;
+import flex.messaging.log.Log;
+import flex.messaging.log.LogCategories;
 import flex.messaging.util.ClassUtil;
 
 import org.apache.mina.core.buffer.IoBuffer;
@@ -57,7 +59,9 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
      * @return FlexMessage event
      */
     public FlexMessage decodeFlexMessage(IoBuffer in, RTMP rtmp) {
-    	AmfTrace trace = new AmfTrace();
+    	AmfTrace trace = null;
+    	 if (Log.isDebug()) 
+    		 trace = new AmfTrace();
     	TypeMarshallingContext.setTypeMarshaller(MuleRTMPAMFEndpoint.getInstance().getTypeMarshaller());
         SerializationContext serializationContext = MuleRTMPAMFEndpoint.getInstance().getSerializationContext();
         MessageDeserializer blazeDeserializer = (MessageDeserializer)ClassUtil.createDefaultInstance(serializationContext.getDeserializerClass(), MessageDeserializer.class);
@@ -112,7 +116,8 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
 
         PendingCall call = new PendingCall(serviceName, serviceMethod, params);
         msg.setCall(call);
-        System.out.println(trace.toString());
+        if (Log.isDebug())
+        	Log.getLogger(LogCategories.ENDPOINT_AMF).debug(trace.toString());
         return msg;
         
     }
