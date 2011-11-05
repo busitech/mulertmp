@@ -23,10 +23,11 @@ package wo.lf.red5.server.service;
 import flex.messaging.FlexContext;
 import flex.messaging.MessageBroker;
 import flex.messaging.MessageException;
-import flex.messaging.client.FlexClient;
 import flex.messaging.messages.CommandMessage;
 import flex.messaging.messages.ErrorMessage;
 import flex.messaging.messages.Message;
+import flex.messaging.util.UUIDUtils;
+
 import org.red5.server.api.IConnection;
 import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
@@ -84,15 +85,21 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker {
         try {
             Object bResult;
 
+            Object messageClientId = message.getClientId();
+            if (messageClientId == null) {
+            	message.setClientId(UUIDUtils.createUUID());
+            }
+            
             if (message instanceof CommandMessage) {
                 // handle command message
                 CommandMessage commandMessage = (CommandMessage) message;
-                setUpFlexClientFromMessage(commandMessage);
+                MuleRTMPAMFEndpoint.getInstance().setupFlexClient(commandMessage);
                 // route command to service
                 bResult = messageBroker.routeCommandToService((CommandMessage) message, MuleRTMPAMFEndpoint.getInstance()).getSmallMessage();
+                
 
             } else if(message instanceof Message) {
-                setUpFlexClientFromMessage(message);
+            	MuleRTMPAMFEndpoint.getInstance().setupFlexClient(message);
                 // route async message to service
                 bResult = messageBroker.routeMessageToService(message, MuleRTMPAMFEndpoint.getInstance()).getSmallMessage();
             }else{
@@ -136,18 +143,6 @@ public class MuleRTMPServiceInvoker extends ServiceInvoker {
         }
         return true;
     }
-
-    protected FlexClient setUpFlexClientFromMessage(flex.messaging.messages.Message message) {
-        MuleRTMPAMFEndpoint endpoint = MuleRTMPAMFEndpoint.getInstance();
-        FlexClient client = endpoint.setupFlexClient((String) message.getClientId());
-        // set the clientid into the message
-        message.setClientId(client.getId());
-        // set the endpoint id into the message
-        message.setHeader(Message.ENDPOINT_HEADER, endpoint.getId());
-
-        return client;
-    }
-
 
     public void setMessageBroker(MessageBroker messageBroker) {
         this.messageBroker = messageBroker;

@@ -20,6 +20,7 @@
 
 package org.red5.server.net.rtmp;
 
+import org.red5.compatibility.flex.messaging.messages.CommandMessage;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
@@ -40,6 +41,13 @@ import org.red5.server.service.Call;
 import org.red5.server.stream.StreamService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import flex.messaging.FlexContext;
+import flex.messaging.client.FlexClient;
+import flex.messaging.messages.Message;
+
+import wo.lf.blaze.messaging.MuleRTMPFlexSession;
+import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -218,10 +226,41 @@ public class MuleRTMPHandler extends RTMPHandler {
                 // Evaluate request for AMF3 encoding
                 if (Integer.valueOf(3).equals(params.get("objectEncoding")) && call instanceof IPendingServiceCall) {
                     Object pcResult = ((IPendingServiceCall) call).getResult();
+                    FlexClient flexClient = null;
+                    String clientId = null;
+                    Object[] args = call.getArguments();
+                    if(args!=null) {
+                    	Object arg1 = args[0];
+                    	if(arg1 instanceof CommandMessage) {
+                    		
+                    		MuleRTMPFlexSession flexSession;
+                            if (((MuleRTMPMinaConnection) conn).getFlexSession() == null) {
+                                flexSession = MuleRTMPAMFEndpoint.getInstance().sessionProvider.createSession((MuleRTMPMinaConnection) conn);
+                                ((MuleRTMPMinaConnection) conn).setFlexSession(flexSession);
+                            } else {
+                                flexSession = ((MuleRTMPMinaConnection) conn).getFlexSession();
+                            }
+                            FlexContext.setThreadLocalSession(flexSession);
+                    		
+                        	clientId = (String)((CommandMessage) arg1).getHeader(Message.FLEX_CLIENT_ID_HEADER);
+                        	
+                        	 // This indicates that we're dealing with a non-legacy client that hasn't been
+                            // assigned a FlexClient Id yet. Reset to null to generate a fresh Id.
+                            if (clientId != null && clientId.equals("nil"))
+                            	clientId = null;
+                        	
+                        	if(clientId==null) {                        		
+                        		flexClient = MuleRTMPAMFEndpoint.getInstance().setupFlexClient(clientId);
+                        		clientId = flexClient.getId();
+                        	}                        	
+                    	}
+                    }
+                    
                     Map<String, Object> result;
                     if (pcResult instanceof Map) {
                         result = (Map<String, Object>) pcResult;
                         result.put("objectEncoding", 3);
+                        result.put("id", clientId);
                     } else if (pcResult instanceof StatusObject) {
                         result = new HashMap<String, Object>();
                         StatusObject status = (StatusObject) pcResult;
@@ -230,6 +269,7 @@ public class MuleRTMPHandler extends RTMPHandler {
                         result.put("application", status.getApplication());
                         result.put("level", status.getLevel());
                         result.put("objectEncoding", 3);
+                        result.put("id", clientId);
                         ((IPendingServiceCall) call).setResult(result);
                     }
 
