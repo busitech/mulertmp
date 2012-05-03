@@ -35,7 +35,7 @@ package wo.lf.mule.messaging.channels{
 	use namespace mx_internal;
 	
 	public class MuleRTMPChannel extends NetConnectionChannel
-	{
+	{	
 		public function MuleRTMPChannel(id:String=null, uri:String=null)
 		{
 			super(id, uri);
@@ -155,5 +155,18 @@ package wo.lf.mule.messaging.channels{
 				throw e;
 			}
 		}
+		
+		public function onBWCheck(... rest):Number
+		{
+			trace("Checking Bandwidth");
+			return 0;
+		}
+		
+		public function onBWDone(... rest):void
+		{
+			var object:Object = rest[0];
+			trace("KBDown: " + object.kbitDown + " Delta Down: " + object.deltaDown + " Delta Time: " + object.deltaTime + " Latency: " + object.latency);		
+		}
+		
 	}
 }
