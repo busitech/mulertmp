@@ -106,14 +106,15 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
                 }
             }
         }
-        /*    we need to change this because action is actually null for some reason
-       final int dotIndex = action.lastIndexOf('.');
-       String serviceName = (dotIndex == -1) ? null : action.substring(0, dotIndex);
-       String serviceMethod = (dotIndex == -1) ? action : action.substring(dotIndex + 1, action.length());
-        */
         String serviceName = null;
         String serviceMethod = "mule";
-
+        // action is not null when the server calls a client method, and this message is the return value.
+        // Red5 Input decoder always returns a String object even if empty, but Blaze decoder preserves null
+        if(action!=null) {
+        	final int dotIndex = action.lastIndexOf('.');
+        	serviceName = (dotIndex == -1) ? null : action.substring(0, dotIndex);
+        	serviceMethod = (dotIndex == -1) ? action : action.substring(dotIndex + 1, action.length());
+        }
         PendingCall call = new PendingCall(serviceName, serviceMethod, params);
         msg.setCall(call);
         if (Log.isDebug())
