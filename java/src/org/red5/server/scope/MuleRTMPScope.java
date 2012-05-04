@@ -18,7 +18,7 @@
  *
  */
 
-package org.red5.server;
+package org.red5.server.scope;
 
 import org.red5.server.api.IConnection;
 

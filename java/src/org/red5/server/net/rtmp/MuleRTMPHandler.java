@@ -23,7 +23,7 @@ package org.red5.server.net.rtmp;
 import org.red5.compatibility.flex.messaging.messages.CommandMessage;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IContext;
-import org.red5.server.api.IScope;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
@@ -52,7 +52,7 @@ import wo.lf.blaze.messaging.endpoints.MuleRTMPAMFEndpoint;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.red5.server.api.ScopeUtils.getScopeService;
+import static org.red5.server.util.ScopeUtils.getScopeService;
 
 public class MuleRTMPHandler extends RTMPHandler {
 
