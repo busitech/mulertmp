@@ -22,12 +22,16 @@ package org.red5.server.net.rtmp.codec;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.red5.io.object.Output;
 import org.red5.io.object.Serializer;
 import org.red5.server.api.IConnection;
+import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
+import org.red5.server.net.ICommand;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.status.StatusCodes;
@@ -51,16 +55,9 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
     public static final String NO_TRANSACTION_HEADER = "NO_TRANSACTION";
 
     private static final Logger log = LoggerFactory.getLogger(MuleRTMPProtocolEncoder.class);
-    private Serializer serializer;
 
-    public void setSerializer(Serializer serializer) {
-        super.setSerializer(serializer);//
-        this.serializer = serializer;
-    }
-
-    protected void encodeNotifyOrInvoke(IoBuffer out, Notify invoke, RTMP rtmp) {
+    protected void encodeCommand(IoBuffer out, ICommand command) {
         // TODO: tidy up here
-        // log.debug("Encode invoke");
         SerializationContext serializationContext = MuleRTMPAMFEndpoint.getInstance().getSerializationContext();
         TypeMarshallingContext.setTypeMarshaller(MuleRTMPAMFEndpoint.getInstance().getTypeMarshaller());
         ByteArrayOutputStream baOutput = new ByteArrayOutputStream();
@@ -68,74 +65,81 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
 
         AmfTrace trace = null;
         if (Log.isDebug())
-        	trace = new AmfTrace();
+            trace = new AmfTrace();
 
-        MessageSerializer blazeSerializer = (MessageSerializer)ClassUtil.createDefaultInstance(serializationContext.getSerializerClass(), MessageSerializer.class);        
-        
+        MessageSerializer blazeSerializer = (MessageSerializer)ClassUtil.createDefaultInstance(serializationContext.getSerializerClass(), MessageSerializer.class);
+
         org.red5.io.object.Output output = new org.red5.io.amf.Output(out);
-        final IServiceCall call = invoke.getCall();
+        final IServiceCall call = command.getCall();
         final boolean isPending = (call.getStatus() == Call.STATUS_PENDING);
-//        log.debug("Call: {} pending: {}", call, isPending);
-
+        log.debug("Call: {} pending: {}", call, isPending);
         if (!isPending) {
-            log.debug("Call has been executed, send result. success: " + call.isSuccess());
-            serializer.serialize(output, call.isSuccess() ? "_result" : "_error"); // seems right
+            log.debug("Call has been executed, send result");
+            Serializer.serialize(output, call.isSuccess() ? "_result" : "_error");
         } else {
             log.debug("This is a pending call, send request");
-            // for request we need to use AMF3 for client mode
-            // if the connection is AMF3
-            if (rtmp.getEncoding() == IConnection.Encoding.AMF3 && rtmp.getMode() == RTMP.MODE_CLIENT) {
-                output = new org.red5.io.amf3.Output(out);
-            }
-            final String action = (call.getServiceName() == null) ? call.getServiceMethodName() : call.getServiceName()
-                    + '.' + call.getServiceMethodName();
-            serializer.serialize(output, action); // seems right
+            final String action = (call.getServiceName() == null) ? call.getServiceMethodName() : call.getServiceName() + '.' + call.getServiceMethodName();
+            Serializer.serialize(output, action); // seems right
         }
-        if (invoke instanceof Invoke) {
-            serializer.serialize(output, invoke.getInvokeId());
-            serializer.serialize(output, invoke.getConnectionParams());
+        if (command instanceof Invoke) {
+            Serializer.serialize(output, Integer.valueOf(command.getTransactionId()));
+            Serializer.serialize(output, command.getConnectionParams());
         }
 
         if (call.getServiceName() == null && "connect".equals(call.getServiceMethodName())) {
-            // Response to initial connect, always use AMF0
-        	//blazeSerializer.setVersion(MessageIOConstants.AMF0);
+            // response to initial connect, always use AMF0
+            output = new org.red5.io.amf.Output(out);
         } else {
-            if (rtmp.getEncoding() == IConnection.Encoding.AMF3) {
-                //out.put(AMF.TYPE_AMF3_OBJECT);
-            	blazeSerializer.setVersion(MessageIOConstants.AMF3);
+            if (Red5.getConnectionLocal().getEncoding() == IConnection.Encoding.AMF3) {
+                output = new org.red5.io.amf3.Output(out);
+                blazeSerializer.setVersion(MessageIOConstants.AMF3);
             } else {
-            	//blazeSerializer.setVersion(MessageIOConstants.AMF0);
+                output = new org.red5.io.amf.Output(out);
             }
         }
         try {
-        	blazeSerializer.initialize(serializationContext, dataOutStream, trace);
-            if (!isPending && (invoke instanceof Invoke)) {
-                IPendingServiceCall pendingCall = (IPendingServiceCall) call;
-                if (!call.isSuccess()) {
-                    log.debug("Call was not successful");
-                    if (call.getException() != null) {
-                        StatusObject status = generateErrorResult(StatusCodes.NC_CALL_FAILED, call.getException());
-                        pendingCall.setResult(status);
-                    }
-                }
-                Object res = pendingCall.getResult();
-                log.debug("Writing result: {}", res);
-                if (res != null) {                	
-                    blazeSerializer.writeObject(res);
-                }
-            } else {
-                log.debug("Writing params");
-                final Object[] args = call.getArguments();
-                if (args != null) {
-                    for (Object element : args) {
-                    	blazeSerializer.writeObject(element);
-                    }
+            blazeSerializer.initialize(serializationContext, dataOutStream, trace);
+        if (!isPending && (command instanceof Invoke)) {
+            IPendingServiceCall pendingCall = (IPendingServiceCall) call;
+            if (!call.isSuccess()) {
+                log.debug("Call was not successful");
+                if (call.getException() != null) {
+                    StatusObject status = generateErrorResult(StatusCodes.NC_CALL_FAILED, call.getException());
+                    pendingCall.setResult(status);
                 }
             }
+            Object res = pendingCall.getResult();
+            log.debug("Writing result: {}", res);
+            if (res != null) {
+                blazeSerializer.writeObject(res);
+            }
+        } else {
+            log.debug("Writing params");
+            final Object[] args = call.getArguments();
+            if (args != null) {
+                for (Object element : args) {
+                    blazeSerializer.writeObject(element);
+                    /*if (element instanceof ByteBuffer) {
+                        // a byte buffer indicates that serialization is already complete, send raw
+                        final ByteBuffer buf = (ByteBuffer) element;
+                        buf.mark();
+                        try {
+                            out.put(buf);
+                        } finally {
+                            buf.reset();
+                        }
+                    } else {
+                        // standard serialize
+                        Serializer.serialize(output, element);
+                    }
+                    */
+                }
+            }
+        }
 
-            dataOutStream.flush();
-            if (Log.isDebug())
-            	Log.getLogger(LogCategories.ENDPOINT_AMF).debug(trace.toString());            	
+        dataOutStream.flush();
+        if (Log.isDebug())
+            Log.getLogger(LogCategories.ENDPOINT_AMF).debug(trace.toString());
         } catch (IOException ioException) {
             log.error("Upps", ioException);
         }
@@ -152,9 +156,9 @@ public class MuleRTMPProtocolEncoder extends org.red5.server.net.rtmp.codec.RTMP
             log.error("Caught exception", e);
         }
 
-        if (invoke.getData() != null) {
+        if (command.getData() != null) {
             out.setAutoExpand(true);
-            out.put(invoke.getData());
+            out.put(command.getData());
         }
 
     }

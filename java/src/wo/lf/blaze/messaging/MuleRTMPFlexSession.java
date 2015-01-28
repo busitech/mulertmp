@@ -81,6 +81,7 @@ public class MuleRTMPFlexSession extends AbstractConnectionAwareSession {
         log.debug("Invalidating session");
         if (connection != null) {
             log.debug("Closing connection {}", connection);
+            connection.getFlexSession().invalidate();
             connection.setFlexSession(null);
             connection.close();
             connection = null;

@@ -39,11 +39,12 @@ public class MuleRTMPMinaConnection extends RTMPMinaConnection {
 
     @Override
     public void close() {
-        super.close();
+        System.out.println("[MuleRTMPMinaconnection] close() called on session id ["+this.sessionId+"].");
         if (flexSession != null) {
             flexSession.invalidate();
             flexSession = null;
         }
+        super.close();
     }
 
     @Override
@@ -53,14 +54,24 @@ public class MuleRTMPMinaConnection extends RTMPMinaConnection {
             invoke.setCall(call);
             Object[] args = call.getArguments();
             if (args != null && args.length == 1 && args[0] instanceof AsyncMessage && ((AsyncMessage) args[0]).headerExists(MuleRTMPProtocolEncoder.NO_TRANSACTION_HEADER)) {
-                invoke.setInvokeId(0);
+                invoke.setTransactionId(0);
                 ((AsyncMessage) args[0]).setHeader(MuleRTMPProtocolEncoder.NO_TRANSACTION_HEADER,null);
             }else{
-                invoke.setInvokeId(getInvokeId());
+                invoke.setTransactionId(getTransactionId());
             }
-            if (call instanceof IPendingServiceCall && invoke.getInvokeId()!=0) {
-                registerPendingCall(invoke.getInvokeId(), (IPendingServiceCall) call);
+            if (call instanceof IPendingServiceCall && invoke.getTransactionId()!=0) {
+                registerPendingCall(invoke.getTransactionId(), (IPendingServiceCall) call);
             }
             getChannel(channel).write(invoke);
+    }
+
+    @Override
+    protected void onInactive() {
+        System.out.println("[MuleRTMPMinaconnection] onInactive() called on session id ["+this.sessionId+"].");
+        if (flexSession != null) {
+            flexSession.invalidate();
+            flexSession = null;
+        }
+        super.onInactive();
     }
 }

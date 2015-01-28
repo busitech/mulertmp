@@ -2,18 +2,24 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:flex="http://www.springframework.org/schema/flex"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="
-       http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
-       http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
        http://www.springframework.org/schema/flex
        http://www.springframework.org/schema/flex/spring-flex-1.5.xsd">
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations" value="WEB-INF/red5.properties"/>
     </bean>
+
+    <!-- Server bean -->
+    <bean id="red5.server" class="org.red5.server.Server" />
+
+    <bean id="minaEncoder" class="org.red5.server.net.rtmp.codec.MuleRTMPMinaProtocolEncoder" scope="prototype">
+        <property name="baseTolerance" value="${rtmp.encoder_base_tolerance}" />
+        <property name="dropLiveFuture" value="${rtmp.encoder_drop_live_future}" />
+    </bean>
+
+    <bean id="minaDecoder" class="org.red5.server.net.rtmp.codec.MuleRTMPMinaProtocolDecoder" scope="prototype" />
+
     <bean id="schedulingService" class="org.red5.server.scheduling.QuartzSchedulingService"/>
     <!-- Maps request paths at /* to the BlazeDS MessageBroker -->
     <flex:message-broker id="_messageBroker" services-config-path="/WEB-INF/flex/services-config.xml"/>
@@ -38,79 +44,85 @@
         <property name="serviceInvoker" ref="mule.serviceInvoker"/>
     </bean>
 
-    <bean id="globalScope" class="org.red5.server.Scope" init-method="init">
+    <bean id="globalScope" class="org.red5.server.scope.GlobalScope" init-method="register">
+        <property name="server" ref="red5.server" />
         <property name="context" ref="globalContext"/>
         <property name="handler" ref="global.handler"/>
+        <property name="persistenceClass">
+            <value>org.red5.server.persistence.FilePersistence</value>
+        </property>
     </bean>
 
     <bean id="rtmpMinaConnManager" class="org.red5.server.net.rtmp.RTMPConnManager"/>
 
     <bean id="rtmpHandler" class="org.red5.server.net.rtmp.MuleRTMPHandler">
         <property name="statusObjectService">
-            <bean class="org.red5.server.net.rtmp.status.StatusObjectService" init-method="initialize">
-                <property name="serializer" ref="serializer"/>
+            <bean class="org.red5.server.net.rtmp.status.StatusObjectService">
+
             </bean>
         </property>
 
         <property name="globalScope" ref="globalScope"/>
 
     </bean>
-
-    <!-- Serializes objects to AMF binary -->
-    <bean id="serializer" class="org.red5.io.object.Serializer"/>
-    <!-- Deserializes objects from AMF binary -->
-    <bean id="deserializer" class="org.red5.io.object.Deserializer"/>
-
-    <!-- RTMP codec factory -->
-    <bean id="rtmpCodecFactory" class="org.red5.server.net.rtmp.codec.RTMPMinaCodecFactory"
-          autowire="byType" init-method="init">
-        <property name="minaEncoder">
-            <bean class="org.red5.server.net.rtmp.codec.MuleRTMPMinaProtocolEncoder">
-                <property name="serializer">
-                    <ref bean="serializer"/>
-                </property>
-            </bean>
-        </property>
-        <property name="minaDecoder">
-            <bean class="org.red5.server.net.rtmp.codec.MuleRTMPMinaProtocolDecoder">
-                <property name="deserializer">
-                    <ref bean="deserializer"/>
-                </property>
-            </bean>
-        </property>
+    <bean id="red5.scopeResolver" class="org.red5.server.scope.ScopeResolver">
+        <property name="globalScope" ref="globalScope" />
     </bean>
+  
+    <!-- RTMP codec factory -->
+    <bean id="rtmpCodecFactory" class="org.red5.server.net.rtmp.codec.RTMPMinaCodecFactory" autowire="byType"/>
 
     <!-- RTMP Mina IO Handler -->
-    <bean id="rtmpMinaIoHandler"
-          class="org.red5.server.net.rtmp.RTMPMinaIoHandler">
+    <bean id="rtmpMinaIoHandler" class="org.red5.server.net.rtmp.MuleRTMPMinaIoHandler">
         <property name="handler" ref="rtmpHandler"/>
-        <property name="codecFactory" ref="rtmpCodecFactory"/>
-        <property name="rtmpConnManager" ref="rtmpMinaConnManager"/>
+        <property name="codecFactory" ref="rtmpCodecFactory" />
     </bean>
 
     <!-- RTMP Mina Transport -->
     <bean id="rtmpTransport" class="org.red5.server.net.rtmp.RTMPMinaTransport" init-method="start"
           destroy-method="stop">
         <property name="ioHandler" ref="rtmpMinaIoHandler"/>
-        <property name="connectors">
+        <!--<property name="receiveBufferSize" value="${rtmp.receive_buffer_size}"/>-->
+        <!-- This is the interval at which the sessions are polled for stats. If mina monitoring is not
+                  enabled, polling will not occur. -->
+        <property name="minaPollInterval" value="${jmx.mina.poll.interval}"/>
+        <property name="tcpNoDelay" value="${rtmp.tcp_nodelay}"/>
+
+        <property name="addresses">
             <list>
-                <bean class="java.net.InetSocketAddress">
-                    <constructor-arg index="0" type="java.lang.String" value="${rtmp.host}"/>
-                    <constructor-arg index="1" type="int" value="${rtmp.port}"/>
-                </bean>
+                <value>${rtmp.host}:${rtmp.port}</value>
                 <!-- You can now add additional ports and ip addresses
-                <bean class="java.net.InetSocketAddress">
-                    <constructor-arg index="0" type="java.lang.String" value="${rtmp.host}" />
-                    <constructor-arg index="1" type="int" value="1936" />
-                </bean>
+				<value>${rtmp.host}:1936</value>
                  -->
             </list>
         </property>
-        <property name="receiveBufferSize" value="${rtmp.receive_buffer_size}"/>
-        <!-- This is the interval at which the sessions are polled for stats. If mina monitoring is not
-                  enabled, polling will not occur. -->
-        <property name="jmxPollInterval" value="1000"/>
-        <property name="tcpNoDelay" value="${rtmp.tcp_nodelay}"/>
+        <property name="ioThreads" value="${rtmp.io_threads}" />
+        <property name="sendBufferSize" value="${rtmp.send_buffer_size}" />
+        <property name="receiveBufferSize" value="${rtmp.receive_buffer_size}" />
+        <property name="trafficClass" value="${rtmp.traffic_class}" />
+        <property name="backlog" value="${rtmp.backlog}" />
+        <property name="keepAlive" value="${rtmp.tcp_keepalive}" />
+        <property name="thoughputCalcInterval" value="${rtmp.thoughput_calc_interval}" />
+        <property name="enableDefaultAcceptor" value="${rtmp.default_acceptor}" />
+        <!-- Pool settings are used when the default acceptor is disabled -->
+        <property name="initialPoolSize" value="${rtmp.initial_pool_size}" />
+        <property name="maxPoolSize" value="${rtmp.max_pool_size}" />
+        <property name="maxProcessorPoolSize" value="${rtmp.max_processor_pool_size}" />
+        <property name="executorKeepAliveTime" value="${rtmp.executor_keepalive_time}" />
+        <!-- This is the interval at which the sessions are polled for stats. If mina monitoring is not enabled, polling will not occur. -->
+        <property name="enableMinaMonitor" value="${jmx.mina.monitor.enable}" />
+        <property name="enableMinaLogFilter" value="${mina.logfilter.enable}" />
+    </bean>
+
+    <!-- RTMP -->
+    <bean id="rtmpScheduler" scope="prototype" class="org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler">
+        <property name="poolSize" value="${rtmp.scheduler.pool_size}" />
+    </bean>
+
+    <bean id="messageExecutor" scope="prototype" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="corePoolSize" value="1" />
+        <property name="maxPoolSize" value="1" />
+        <property name="queueCapacity" value="${rtmp.executor.queue_capacity}" />
     </bean>
 
     <!-- RTMP Mina Connection -->
@@ -121,6 +133,24 @@
         <!-- Disconnect client after X ms of not responding. -->
         <property name="maxInactivity" value="${rtmp.max_inactivity}"/>
         <!-- Max. time in milliseconds to wait for a valid handshake. -->
-        <property name="maxHandshakeTimeout" value="5000"/>
+        <property name="maxHandshakeTimeout" value="${rtmp.max_handshake_time}"/>
+
+        <!-- Executor for scheduled tasks -->
+        <property name="scheduler" ref="rtmpScheduler" />
+        <!-- Executor for incoming messages -->
+        <property name="executor" ref="messageExecutor" />
+        <!-- Default server bandwidth per connection -->
+        <property name="defaultServerBandwidth" value="${rtmp.default_server_bandwidth}" />
+        <!-- Default client bandwidth per connection -->
+        <property name="defaultClientBandwidth" value="${rtmp.default_client_bandwidth}" />
+        <!-- Client bandwidth limit type: 0 = hard, 1 = soft, 2 = dynamic -->
+        <property name="limitType" value="${rtmp.client_bandwidth_limit_type}" />
+        <!-- Bandwidth detection. If "false" the server will NOT initiate a check -->
+        <property name="bandwidthDetection" value="${rtmp.bandwidth_detection}" />
+        <!-- Maximum time allowed for a single RTMP packet to be processed -->
+        <property name="maxHandlingTimeout" value="${rtmp.max_handling_time}" />
+        <!-- Specify the size of queue that will trigger audio packet dropping, disabled if it's 0 -->
+        <property name="executorQueueSizeToDropAudioPackets" value="${rtmp.executor.queue_size_to_drop_audio_packets}" />
+
     </bean>
 </beans>

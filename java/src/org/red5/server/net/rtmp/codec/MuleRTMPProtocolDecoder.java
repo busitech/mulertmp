@@ -44,13 +44,6 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
 
     private static final Logger log = LoggerFactory.getLogger(MuleRTMPMinaProtocolDecoder.class);
 
-    private Deserializer deserializer;
-
-    public void setDeserializer(Deserializer deserializer) {
-        super.setDeserializer(deserializer);//
-        this.deserializer = deserializer;
-    }
-
     /**
      * Decodes FlexMessage event.
      *
@@ -58,7 +51,7 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
      * @param rtmp RTMP protocol state
      * @return FlexMessage event
      */
-    public FlexMessage decodeFlexMessage(IoBuffer in, RTMP rtmp) {
+    public FlexMessage decodeFlexMessage(IoBuffer in) {
     	AmfTrace trace = null;
     	 if (Log.isDebug()) 
     		 trace = new AmfTrace();
@@ -75,16 +68,16 @@ public class MuleRTMPProtocolDecoder extends RTMPProtocolDecoder {
         org.red5.io.amf3.Input.RefStorage refStorage = new org.red5.io.amf3.Input.RefStorage();
 
         Input input = new org.red5.io.amf.Input(in);
-        String action = deserializer.deserialize(input, String.class);
-        int invokeId = deserializer.<Number>deserialize(input, Number.class).intValue();
+        String action = Deserializer.deserialize(input, String.class);
+        int invokeId = Deserializer.<Number>deserialize(input, Number.class).intValue();
         FlexMessage msg = new FlexMessage();
-        msg.setInvokeId(invokeId);
+        msg.setTransactionId(invokeId);
         Object[] params = new Object[]{};
 
         if (in.hasRemaining()) {
             ArrayList<Object> paramList = new ArrayList<Object>();
 
-            final Object obj = deserializer.deserialize(input, Object.class);
+            final Object obj = Deserializer.deserialize(input, Object.class);
             if (obj != null) {
                 paramList.add(obj);
             }
