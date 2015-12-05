@@ -1,0 +1,1 @@
+a hack to use the rtmp handler of red5 as a rtmp endpoint in blazeds.
